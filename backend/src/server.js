@@ -3,8 +3,8 @@ const express  = require('express');
 const cors     = require('cors');
 const { connect } = require('./storage/db');
 
-const evaluationsRouter = require('./src/routes/evaluations');
-const adminRouter       = require('./src/routes/admin');
+const evaluationsRouter = require('./routes/evaluations');
+const adminRouter       = require('./routes/admin');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
