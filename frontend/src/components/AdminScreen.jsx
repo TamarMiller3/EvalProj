@@ -23,8 +23,8 @@ export function AdminScreen({ onBack, active }) {
 
   async function loadEntries() {
     setLoading(true);
-    try {
-      const data = await api.adminGetEntries(ADMIN_PW);
+      try {
+          const data = await api.adminGetEntries(pw);
       setEntries(data);
     } finally {
       setLoading(false);
