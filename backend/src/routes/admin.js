@@ -1,9 +1,9 @@
 const express  = require('express');
 const router   = express.Router();
-const store    = require('../storage/store');
+const repo = require('../storage/controller');
 const { adminAuthHeader } = require('../middleware/auth');
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'RAMA2025';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // POST /api/admin/login
 router.post('/login', (req, res) => {
@@ -16,7 +16,7 @@ router.post('/login', (req, res) => {
 // GET /api/admin/entries — all evaluations (admin only)
 router.get('/entries', adminAuthHeader, async (req, res) => {
   try {
-    const entries = await store.listAll();
+      const entries = await repo.listAll();
     return res.json(entries);
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -26,7 +26,7 @@ router.get('/entries', adminAuthHeader, async (req, res) => {
 // DELETE /api/admin/entries/:code
 router.delete('/entries/:code', adminAuthHeader, async (req, res) => {
   try {
-    await store.delete(req.params.code);
+      await repo.delete(req.params.code);
     return res.json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message });
