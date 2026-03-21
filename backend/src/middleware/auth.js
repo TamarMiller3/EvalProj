@@ -1,4 +1,4 @@
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'RAMA2025';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
 function adminAuth(req, res, next) {
   const { password } = req.body;
