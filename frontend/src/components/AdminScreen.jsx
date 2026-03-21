@@ -2,7 +2,6 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { api } from '../api';
 
-const ADMIN_PW = 'RAMA2025';
 
 export function AdminScreen({ onBack, active }) {
   const [authed, setAuthed]     = useState(false);
