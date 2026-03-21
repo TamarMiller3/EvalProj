@@ -58,7 +58,6 @@ router.put('/:code', async (req, res) => {
 
     if (!body)
         return res.status(400).json({ error: 'אין נתונים לשמירה' });
-
     try {
         await repo.updateEvaluation(req.params.code, body);
         return res.json({ success: true });
@@ -66,5 +65,5 @@ router.put('/:code', async (req, res) => {
         return res.status(500).json({ error: e.message });
     }
 });
-
+ 
 module.exports = router;
