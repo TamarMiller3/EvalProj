@@ -46,15 +46,22 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   return (
     <div className="screen landing-screen" style={{ display: 'flex' }}>
       <div className="landing-card">
-        <div style={{ fontSize: '3rem', marginBottom: 6 }}>🎓</div>
+
+        {/* סמלים */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <img src="/logo-unit.png"      alt="היחידה לתכנון, פיתוח והערכה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+          <img src="/logo-education.png" alt="משרד החינוך מחוז חיפה"       style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+        </div>
+
+        <div style={{ fontSize: '2rem', marginBottom: 4 }}>🎓</div>
         <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--navy)', marginBottom: 5 }}>
           הערכת תוכניות חינוכיות
         </div>
         <div style={{ fontSize: '0.88rem', color: 'var(--gray)', marginBottom: 32, lineHeight: 1.6 }}>
-          כלי להערכת אפקטיביות תוכניות בית-ספריות<br />לשימוש מנהלים ואנשי צוות
+          התבוננות מעמיקה על יישום תוכנית בית ספרית<br />לשימוש מנהלים ואנשי צוות
         </div>
 
-        {/* Return with code */}
+        {/* כניסה עם קוד קיים */}
         <div style={{ background: '#e8f5f2', border: '2px solid var(--teal)', borderRadius: 14, padding: 16, marginBottom: 18 }}>
           <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--teal)', marginBottom: 10 }}>
             🔄 כבר יש לך קוד? הכנס/י כאן
@@ -64,6 +71,11 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
               value={returnCode}
               onChange={e => setReturnCode(e.target.value.toUpperCase())}
               onKeyDown={e => e.key === 'Enter' && handleResume()}
+              onPaste={e => {
+                e.preventDefault();
+                const text = e.clipboardData.getData('text').trim().toUpperCase();
+                setReturnCode(text);
+              }}
               placeholder="הקוד שקיבלת"
               style={{ flex: 1, border: '2px solid var(--teal)', borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '1rem', letterSpacing: 2, textAlign: 'center', background: 'white', outline: 'none' }}
             />
@@ -77,7 +89,6 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
 
         <div className="divider">או — הרשמה ראשונה</div>
 
-        {/* New registration */}
         <div className="fg"><label>שמך המלא</label>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="הכנס את שמך" disabled={codeReady} />
         </div>
