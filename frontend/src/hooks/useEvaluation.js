@@ -21,8 +21,9 @@ export function useEvaluation() {
   const [lastSaved, setLastSaved]   = useState(null);
   const autoSaveTimer               = useRef(null);
 
+  // שלב א׳ מקבל גם scales כי סולם fit נכלל בחישוב
   const scores = [
-    calcPhase1Score(checks),
+    calcPhase1Score(checks, scales),
     calcPhase2Score(scales),
     calcPhase3Score(scales)
   ];
@@ -77,10 +78,10 @@ export function useEvaluation() {
   };
 
   const loadData = (data) => {
-    if (data.fields)  setFields(data.fields);
-    if (data.checks)  setChecks(data.checks);
-    if (data.scales)  setScales(data.scales);
-    if (data.notes)   setNotes(data.notes);
+    if (data.fields)   setFields(prev => ({ ...initFields(), ...data.fields }));
+    if (data.checks)   setChecks(prev => ({ ...initChecks(), ...data.checks }));
+    if (data.scales)   setScales(prev => ({ ...initScales(), ...data.scales }));
+    if (data.notes)    setNotes(prev => ({ ...initNotes(), ...data.notes }));
     if (data.decision) setDecision(data.decision);
   };
 
