@@ -49,8 +49,8 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
 
         {/* סמלים */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <img src="/logo-unit.png"      alt="היחידה לתכנון, פיתוח והערכה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
-          <img src="/logo-education.png" alt="משרד החינוך מחוז חיפה"       style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+          <img src="./logo-unit.png"      alt="היחידה לתכנון, פיתוח והערכה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+          <img src="./logo-education.png" alt="משרד החינוך מחוז חיפה"       style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
         </div>
 
         <div style={{ fontSize: '2rem', marginBottom: 4 }}>🎓</div>
