@@ -1,12 +1,18 @@
 export const CHECKS = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10',
   'c11','c12','c13','c14','c15','c16','c17','c18'];
 
-export const SCALES = ['fit','reg1','reg2','reg3','qu1','qu2','qu3','qu4','qu5',
-  'pr1','pr2','pr3','out1','out2','out3','out4'];
+// reg3, pr3, out3 הוסרו; fit נשאר
+export const SCALES = ['fit','reg1','reg2','qu1','qu2','qu3','qu4','qu5',
+  'pr1','pr2','out1','out2','out4'];
 
 export const NOTES = ['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'];
 
-export const FIELDS = ['f-prog','f-year','f-target','f-domain','f-num','f-contact'];
+export const FIELDS = [
+  'f-prog','f-year','f-seniority','f-target',
+  'f-domain','f-domain-other',
+  'f-area','f-area-other',
+  'f-num','f-contact'
+];
 
 export const STEPS = [
   { label: 'א׳ — טרום' },
@@ -50,7 +56,26 @@ export const TARGET_OPTIONS = [
   ]}
 ];
 
+export const SENIORITY_OPTIONS = [
+  'שנה ראשונה','שנה שנייה','שנה שלישית','4 שנים ומעלה'
+];
+
+export const GOAL_OPTIONS = [
+  'קידום ההון האנושי',
+  'צמצום פערים לימודיים/חברתיים',
+  'חיזוק לכידות חברתית',
+  'קידום הטמעת דרכי הוראה חדשניות',
+  'אחר'
+];
+
 export const DOMAIN_OPTIONS = [
   'לימודי / אקדמי','רגשי-חברתי','מניעת אלימות / אקלים',
   'העצמה ומנהיגות','בריאות ורווחה','חינוך ערכי','אחר'
 ];
+
+export const FIT_NOTES = {
+  1: { text: 'קיים פער משמעותי בין צרכי בית הספר למטרות התוכנית. מומלץ לבחון מחדש את התאמת התוכנית או לשנות את אופן יישומה.', bg: '#fdecea', border: '#e74c3c', color: '#922b21' },
+  2: { text: 'ההלימה חלקית. כדאי לבחון כיצד ניתן לחזק את הקשר בין צרכי בית הספר למטרות התוכנית לפני תחילת ההפעלה.', bg: '#fef3e2', border: '#e67e22', color: '#935116' },
+  3: { text: 'ההלימה עונה במידה רבה על הצרכים הבית ספריים שזוהו. אך עדיין ישנו מקום לחידוד ומיקוד ברור יותר כיצד התוכנית עונה על הצורך הספציפי שזוהה.', bg: '#fefde7', border: '#d4ac0d', color: '#7d6608' },
+  4: { text: 'התוכנית מתאימה לצורך שזוהה. המשיכו לתעד את הקשר בין מטרות התוכנית לצרכים לאורך השנה.', bg: '#eafaf1', border: '#27ae60', color: '#1e8449' }
+};

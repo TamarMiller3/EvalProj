@@ -1,21 +1,25 @@
 import { VERBALS } from './formFields';
 
-export function calcPhase1Score(checks) {
-  const total = 18;
+// שלב א׳: 18 צ'קבוקסים + סולם הלימה (fit) = 19 פריטים
+export function calcPhase1Score(checks, scales) {
+  const total = 19;
   const checked = Object.values(checks).filter(Boolean).length;
-  return Math.round((checked / total) * 100);
+  const fitScore = scales?.fit ? (scales.fit - 1) / 3 : 0;
+  return Math.round((checked + fitScore) / total * 100);
 }
 
+// שלב ב׳: 9 סעיפים (reg1,reg2,qu1-qu5,pr1,pr2)
 export function calcPhase2Score(scales) {
-  const keys = ['reg1','reg2','reg3','qu1','qu2','qu3','qu4','qu5','pr1','pr2','pr3'];
+  const keys = ['reg1','reg2','qu1','qu2','qu3','qu4','qu5','pr1','pr2'];
   const weight = 100 / keys.length;
   let sum = 0;
   keys.forEach(k => { if (scales[k]) sum += ((scales[k] - 1) / 3) * weight; });
   return Math.round(sum);
 }
 
+// שלב ג׳: 3 סעיפים (out1,out2,out4)
 export function calcPhase3Score(scales) {
-  const keys = ['out1','out2','out3','out4'];
+  const keys = ['out1','out2','out4'];
   const weight = 100 / keys.length;
   let sum = 0;
   keys.forEach(k => { if (scales[k]) sum += ((scales[k] - 1) / 3) * weight; });
@@ -76,11 +80,11 @@ export function generateInsights(data, scores) {
   if (sc.reg1 && sc.reg1 < 3) actions.push('בררו את הגורמים לביטולים ולנשירה — שוחחו עם המנחה ועם התלמידים.');
   if (sc.reg2 && sc.reg2 < 3) actions.push('בדקו האם קהל היעד המקורי עדיין משתתף — שקלו גיוס מחדש.');
   if (sc.qu2 && sc.qu2 < 3) actions.push('שקלו הדרכה ממוקדת למנחה או בחינת חלופה מתאימה יותר.');
-  if (sc.qu3 && sc.qu3 < 3) actions.push('בדקו אם הסילבוס מיושם בפועל — בצעו תצפית על מפגש.');
-  if (sc.pr1 && sc.pr1 < 3) actions.push('תכננו נקודת בדיקה לימודית — השוו לנתוני בסיס אם קיימים.');
-  if (sc.pr2 && sc.pr2 < 3) actions.push('אספו עדויות רגשיות-חברתיות: שאלוני רווחה, תצפית מורים.');
+  if (sc.qu3 && sc.qu3 < 3) actions.push('בדקו אם מטרות התוכנית מיושמות בפועל — בצעו תצפית על מפגש.');
+  if (sc.pr1 && sc.pr1 < 3) actions.push('תכננו נקודת בדיקה — השוו לנתוני בסיס אם קיימים.');
+  if (sc.pr2 && sc.pr2 < 3) actions.push('בדקו זמינות תשתיות ומשאבים להמשך — האם נדרש תגבור?');
   if (sc.out1 && sc.out1 < 3) actions.push('נתחו את הפער בין יעדי ההתחלה לתוצאות בפועל.');
-  if (sc.out3 && sc.out3 < 3) actions.push('בצעו שיחה עם הצוות המלווה — מה ניתן לשפר לשנת הלימודים הבאה?');
+  if (sc.out2 && sc.out2 < 3) actions.push('בצעו שיחה עם קהל היעד — מה ניתן לשפר לשנת הלימודים הבאה?');
   if (data.decision === 'modify') actions.push('תכננו את השינויים הנדרשים: מה ישתנה, מי אחראי, מתי מבצעים.');
   if (data.decision === 'replace') actions.push('בצעו מיפוי חלופות — חפשו תוכניות דומות עם עדויות הצלחה.');
   if (data.decision === 'stop') actions.push('תעדו את הלקחים: מה לא עבד ולמה — כדי להימנע מכך בעתיד.');
