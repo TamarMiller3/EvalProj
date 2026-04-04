@@ -28,15 +28,15 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
 
         <ScaleLegend labels={['לא הושג', 'הושג חלקית', 'הושג ברובו', 'הושג במלואו']} />
 
+        {/* השגת יעדים — 3 סעיפים */}
         <Section icon="🎯" iconBg="#fef3e2" title="השגת יעדים ותוצאות" desc="השוואה בין נקודת הפתיחה לנקודת הסוף" defaultOpen>
           {[
-            { key: 'out1', label: 'שיפור לימודי — עד כמה חל שינוי לעומת נתוני הבסיס?' },
-            { key: 'out2', label: 'שיפור רגשי-חברתי-התנהגותי' },
-            { key: 'out3', label: 'שביעות רצון כוללת — תלמידים + צוות' },
-            { key: 'out4', label: 'יחס עלות–תועלת', sub: 'השקעה מול השפעה שנמדדה' },
-          ].map(({ key, label, sub }) => (
+            { key: 'out1', label: 'הושג שיפור בתחום הנבחר במסגרת התוכנית' },
+            { key: 'out2', label: 'שביעות הרצון של קהל היעד המשתתף בתוכנית גבוהה' },
+            { key: 'out4', label: 'התוצאות שהושגו מצביעות על כדאיות ההשקעה בתוכנית' },
+          ].map(({ key, label }) => (
             <div key={key} className="scale-item">
-              <div className="scale-label">{label}{sub && <span className="scale-sub">{sub}</span>}</div>
+              <div className="scale-label">{label}</div>
               <ScaleWidget scaleKey={key} value={scales[key]} onChange={setScale} />
             </div>
           ))}
@@ -44,6 +44,7 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n8} onChange={e => setNote('n8', e.target.value)} placeholder="ציון ממוצע X → Y | נוכחות X% → Y%..." />
         </Section>
 
+        {/* לקחים והמלצות */}
         <Section icon="💡" iconBg="#e8eef8" title="לקחים, תובנות והמלצות" desc="מה למדנו? מה היה שונה?">
           <span className="nl">🔴 מה לא עבד:</span>
           <textarea className="na" value={notes.n9}  onChange={e => setNote('n9',  e.target.value)} placeholder="מה נכשל? מה היה קשה?" />

@@ -28,11 +28,11 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
 
         <ScaleLegend />
 
+        {/* סדירות וכמות — 2 סעיפים */}
         <Section icon="📅" iconBg="#e8f5f2" title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
           {[
-            { key: 'reg1', label: 'קיום המפגשים', sub: 'מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי' },
-            { key: 'reg2', label: 'מספר המשתתפים — האם קהל היעד אכן משתתף?' },
-            { key: 'reg3', label: 'ניתוח סיבות לביטולים / נשירה' },
+            { key: 'reg1', label: 'המפגשים התקיימו באופן סדיר', sub: 'מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי' },
+            { key: 'reg2', label: 'כל קהל היעד השתתף בכל המפגשים', sub: 'במידה והיו ביטולים / נשירה — פרטו את הסיבות בהערות' },
           ].map(({ key, label, sub }) => (
             <div key={key} className="scale-item">
               <div className="scale-label">{label}{sub && <span className="scale-sub">{sub}</span>}</div>
@@ -43,13 +43,14 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n5} onChange={e => setNote('n5', e.target.value)} placeholder="מספר מפגשים שהתקיימו, סיבות לביטולים..." />
         </Section>
 
+        {/* איכות הביצוע */}
         <Section icon="🌟" iconBg="#fef3e2" title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
           {[
             { key: 'qu1', label: 'תכנון המפגשים' },
             { key: 'qu2', label: 'התאמת המנחה לרציונל התוכנית', sub: 'מיומנויות, גישה פדגוגית, קשר עם תלמידים' },
-            { key: 'qu3', label: 'יישום עקרונות הסילבוס' },
-            { key: 'qu4', label: 'שביעות רצון תלמידים נאספה?' },
-            { key: 'qu5', label: 'שיתוף המורים — הצוות מעורב ומעודכן?' },
+            { key: 'qu3', label: 'מטרות התוכנית מיושמות' },
+            { key: 'qu4', label: 'מידת שביעות רצון התלמידים גבוהה' },
+            { key: 'qu5', label: 'המורים המעורבים בתוכנית מביעים שביעות רצון גבוהה' },
           ].map(({ key, label, sub }) => (
             <div key={key} className="scale-item">
               <div className="scale-label">{label}{sub && <span className="scale-sub">{sub}</span>}</div>
@@ -60,11 +61,11 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n6} onChange={e => setNote('n6', e.target.value)} placeholder="מה עובד טוב? מה בעייתי?" />
         </Section>
 
-        <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים לשינוי?">
+        {/* סימני התקדמות — 2 סעיפים */}
+        <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים ראשוניים לשינוי?">
           {[
-            { key: 'pr1', label: 'שיפור לימודי — עדויות לשינוי בהישגים' },
-            { key: 'pr2', label: 'שיפור רגשי-חברתי — שינוי בהתנהגות / אקלים' },
-            { key: 'pr3', label: 'משאבים בפועל — מספיקים?' },
+            { key: 'pr1', label: 'קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר במסגרת התוכנית' },
+            { key: 'pr2', label: 'תשתיות ומשאבים מספיקים להמשך הפעלת התוכנית' },
           ].map(({ key, label }) => (
             <div key={key} className="scale-item">
               <div className="scale-label">{label}</div>
