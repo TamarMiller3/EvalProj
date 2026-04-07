@@ -25,7 +25,7 @@ router.get('/:code', async (req, res) => {
 
 // ✅ create (בדיוק כמו שהיה — עם בדיקה לפני)
 router.post('/', async (req, res) => {
-    const { code, userName, userSchool } = req.body;
+    const { code, userName, userSchool, userPrincipal } = req.body;
 
     if (!code || !userName || !userSchool)
         return res.status(400).json({ error: 'חסרים שדות חובה' });
