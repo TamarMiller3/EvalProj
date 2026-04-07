@@ -36,14 +36,13 @@ export default function App() {
     setPrev(screen);
     setScreen(nextScreen);
   }
-
-  function handleNewUser(code, name, school) {
-    evalState.setUserCode(code);
-    evalState.setUserName(name);
-    evalState.setUserSchool(school);
-    goTo('phase0');
-  }
-
+function handleNewUser(code, name, school, principal) {
+  evalState.setUserCode(code);
+  evalState.setUserName(name);
+  evalState.setUserSchool(school);
+  evalState.setUserPrincipal(principal); // חדש
+  goTo('phase0');
+}
   function handleReturnUser(code, data) {
     evalState.setUserCode(code);
     evalState.setUserName(data.userName || '');
