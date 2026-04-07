@@ -3,23 +3,25 @@ import { api } from '../api';
 import { generateCode } from '../constants/scoreCalc';
 
 export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
-  const [name, setName]       = useState('');
-  const [school, setSchool]   = useState('');
-  const [code, setCode]       = useState(generateCode);
-  const [returnCode, setReturnCode] = useState('');
-  const [codeReady, setCodeReady]   = useState(false);
-  const [error, setError]     = useState('');
-  const [returnError, setReturnError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [institutionCode, setInstitutionCode] = useState('');
+  const [school, setSchool]                   = useState('');
+  const [principal, setPrincipal]             = useState('');
+  const [code, setCode]                       = useState(generateCode);
+  const [returnCode, setReturnCode]           = useState('');
+  const [codeReady, setCodeReady]             = useState(false);
+  const [error, setError]                     = useState('');
+  const [returnError, setReturnError]         = useState('');
+  const [loading, setLoading]                 = useState(false);
 
   async function handleCreate() {
-    if (!name)   return setError('יש להכניס שם');
-    if (!school) return setError('יש להכניס שם בית הספר');
+    if (!institutionCode) return setError('יש להכניס סמל מוסד');
+    if (!school)          return setError('יש להכניס שם בית הספר');
+    if (!principal)       return setError('יש להכניס שם מנהל/ת בית הספר');
     if (!code || code.length < 3) return setError('הקוד חייב להכיל לפחות 3 תווים');
     setLoading(true);
     setError('');
     try {
-      await api.createEvaluation(code.toUpperCase(), name, school);
+      await api.createEvaluation(code.toUpperCase(), institutionCode, school);
       setCodeReady(true);
     } catch (e) {
       setError(e.message === 'קוד זה כבר תפוס' ? 'קוד זה כבר תפוס — נסה/י קוד אחר' : e.message);
@@ -47,10 +49,18 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     <div className="screen landing-screen" style={{ display: 'flex' }}>
       <div className="landing-card">
 
-        {/* סמלים */}
+        {/* לוגואים */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"      alt="היחידה לתכנון, פיתוח והערכה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
-          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg" alt="משרד החינוך מחוז חיפה"       style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+          <img
+            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"
+            alt="היחידה לתכנון, פיתוח והערכה"
+            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
+          />
+          <img
+            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg"
+            alt="משרד החינוך מחוז חיפה"
+            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         <div style={{ fontSize: '2rem', marginBottom: 4 }}>🎓</div>
@@ -89,21 +99,53 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
 
         <div className="divider">או — הרשמה ראשונה</div>
 
-        <div className="fg"><label>שמך המלא</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="הכנס את שמך" disabled={codeReady} />
+        {/* סמל מוסד */}
+        <div className="fg">
+          <label>סמל מוסד</label>
+          <input
+            value={institutionCode}
+            onChange={e => setInstitutionCode(e.target.value)}
+            placeholder="הכנס סמל מוסד"
+            disabled={codeReady}
+          />
         </div>
-        <div className="fg"><label>שם בית הספר</label>
-          <input value={school} onChange={e => setSchool(e.target.value)} placeholder="שם בית הספר" disabled={codeReady} />
+
+        {/* שם בית הספר */}
+        <div className="fg">
+          <label>שם בית הספר</label>
+          <input
+            value={school}
+            onChange={e => setSchool(e.target.value)}
+            placeholder="שם בית הספר"
+            disabled={codeReady}
+          />
         </div>
+
+        {/* שם מנהל/ת */}
+        <div className="fg">
+          <label>שם מנהל/ת בית הספר</label>
+          <input
+            value={principal}
+            onChange={e => setPrincipal(e.target.value)}
+            placeholder="שם מנהל/ת בית הספר"
+            disabled={codeReady}
+          />
+        </div>
+
+        {/* קוד אישי */}
         <div className="fg" style={{ marginBottom: 6 }}>
           <label>קוד אישי</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-              placeholder="קוד לבחירתך" disabled={codeReady}
+            <input
+              value={code}
+              onChange={e => setCode(e.target.value.toUpperCase())}
+              placeholder="קוד לבחירתך"
+              disabled={codeReady}
               style={{ flex: 1, letterSpacing: 2, fontFamily: 'monospace', fontSize: '1rem', border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px', background: 'var(--gray-light)' }}
             />
             {!codeReady && (
-              <button onClick={() => setCode(generateCode())}
+              <button
+                onClick={() => setCode(generateCode())}
                 style={{ flexShrink: 0, padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--gray-light)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'Heebo', fontWeight: 700 }}>
                 🎲 אוטומטי
               </button>
@@ -126,18 +168,22 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
           <>
             <div className="code-display">{code}</div>
             <div className="code-warn">⚠️ <strong>שמור/י את הקוד!</strong> תצטרך/י אותו כדי לחזור ולהמשיך.</div>
-            <button className="btn-main" style={{ background: 'linear-gradient(135deg,#1a2744,#243052)' }}
-              onClick={() => onNewUser(code, name, school)}>
+            <button
+              className="btn-main"
+              style={{ background: 'linear-gradient(135deg,#1a2744,#243052)' }}
+              onClick={() => onNewUser(code, institutionCode, school, principal)}>
               ← המשך למילוי ההערכה
             </button>
           </>
         )}
 
         <div className="divider">או</div>
-        <button onClick={onAdmin}
+        <button
+          onClick={onAdmin}
           style={{ width: '100%', padding: 9, background: 'none', border: '1.5px dashed var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--gray)', fontSize: '0.78rem', fontFamily: 'Heebo' }}>
           🔐 כניסת מנהל מערכת
         </button>
+
       </div>
     </div>
   );
