@@ -67,7 +67,8 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   return (
     <div style={{
       background: 'linear-gradient(140deg,#1a2744 0%,#0d3d5e 55%,#0d7c66 100%)',
-      minHeight: '100vh',
+height: '100vh',
+overflowY: 'auto',  
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
