@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { api } from '../api';
 import { generateCode } from '../constants/scoreCalc';
 
+const LOGO1 = 'https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg';
+const LOGO2 = 'https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg';
+
 export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   const [institutionCode, setInstitutionCode] = useState('');
   const [school, setSchool]                   = useState('');
@@ -45,113 +48,150 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     }
   }
 
+  // ✅ תיקון מובייל: fontSize מוגדר בדיוק 16px בכל שדות הקלט
+  // (מתחת ל-16px הטלפון מזום אוטומטית בעת הקלדה)
+  const inputStyle = {
+    width: '100%',
+    border: '2px solid #e0e6ed',
+    borderRadius: 10,
+    padding: '11px 13px',
+    fontSize: '16px',
+    background: '#f3f4f6',
+    boxSizing: 'border-box',
+    fontFamily: 'Heebo, sans-serif',
+    direction: 'rtl',
+    outline: 'none',
+    WebkitAppearance: 'none',
+  };
+
   return (
-    <div className="screen landing-screen" style={{ display: 'flex' }}>
-      <div className="landing-card">
+    <div style={{
+      background: 'linear-gradient(140deg,#1a2744 0%,#0d3d5e 55%,#0d7c66 100%)',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      // ✅ תיקון מובייל: ריפוד מינימלי שמונע גלישה מחוץ למסך
+      padding: '12px',
+      direction: 'rtl',
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: 24,
+        // ✅ תיקון מובייל: ריפוד מצטמצם אוטומטית במסך קטן
+        padding: 'clamp(20px, 5vw, 44px) clamp(16px, 6vw, 40px)',
+        maxWidth: 460,
+        width: '100%',
+        textAlign: 'center',
+        boxSizing: 'border-box',
+      }}>
 
         {/* לוגואים */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <img
-            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"
-            alt="היחידה לתכנון, פיתוח והערכה"
-            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
-          />
-          <img
-            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg"
-            alt="משרד החינוך מחוז חיפה"
-            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
-          />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <img src={LOGO1} style={{ height: 52, objectFit: 'contain' }} alt="לוגו" />
+          <img src={LOGO2} style={{ height: 52, objectFit: 'contain' }} alt="לוגו" />
         </div>
 
-        <div style={{ fontSize: '2rem', marginBottom: 4 }}>🎓</div>
-        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--navy)', marginBottom: 5 }}>
+        <div style={{ fontSize: 32, marginBottom: 6 }}>🎓</div>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1a2744', marginBottom: 6, fontFamily: 'Heebo, sans-serif' }}>
           הערכת תוכניות חינוכיות
-        </div>
-        <div style={{ fontSize: '0.88rem', color: 'var(--gray)', marginBottom: 32, lineHeight: 1.6 }}>
+        </h1>
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 28, lineHeight: 1.6, fontFamily: 'Heebo, sans-serif' }}>
           התבוננות מעמיקה על יישום תוכנית בית ספרית<br />לשימוש מנהלים ואנשי צוות
-        </div>
+        </p>
 
-        {/* כניסה עם קוד קיים */}
-        <div style={{ background: '#e8f5f2', border: '2px solid var(--teal)', borderRadius: 14, padding: 16, marginBottom: 18 }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--teal)', marginBottom: 10 }}>
-            🔄 כבר יש לך קוד? הכנס/י כאן
+        {/* חזרה עם קוד קיים */}
+        <div style={{ background: '#e8f5f2', border: '2px solid #0d7c66', borderRadius: 14, padding: 14, marginBottom: 18 }}>
+          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0d7c66', marginBottom: 10, fontFamily: 'Heebo, sans-serif' }}>
+            🔄 כבר יש לך קוד?
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               value={returnCode}
-              onChange={e => setReturnCode(e.target.value.toUpperCase())}
-              onKeyDown={e => e.key === 'Enter' && handleResume()}
-              onPaste={e => {
-                e.preventDefault();
-                const text = e.clipboardData.getData('text').trim().toUpperCase();
-                setReturnCode(text);
-              }}
+              onChange={e => setReturnCode(e.target.value)}
               placeholder="הקוד שקיבלת"
-              style={{ flex: 1, border: '2px solid var(--teal)', borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '1rem', letterSpacing: 2, textAlign: 'center', background: 'white', outline: 'none' }}
+              style={{ ...inputStyle, flex: 1, letterSpacing: 2, textAlign: 'center', background: 'white', border: '2px solid #0d7c66' }}
             />
-            <button onClick={handleResume} disabled={loading}
-              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--teal)', color: 'white', fontFamily: 'Heebo', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer' }}>
+            <button
+              onClick={handleResume}
+              disabled={loading}
+              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#0d7c66', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Heebo, sans-serif', whiteSpace: 'nowrap' }}>
               המשך ←
             </button>
           </div>
-          {returnError && <p className="err-line" style={{ marginTop: 8 }}>❌ {returnError}</p>}
+          {returnError && <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: 6 }}>❌ {returnError}</p>}
         </div>
 
-        <div className="divider">או — הרשמה ראשונה</div>
+        {/* מפריד */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0', color: '#6b7280', fontSize: '0.78rem', fontFamily: 'Heebo, sans-serif' }}>
+          <span style={{ flex: 1, height: 1, background: '#e0e6ed' }} />
+          או — הרשמה ראשונה
+          <span style={{ flex: 1, height: 1, background: '#e0e6ed' }} />
+        </div>
 
         {/* סמל מוסד */}
-        <div className="fg">
-          <label>סמל מוסד</label>
+        <div style={{ textAlign: 'right', marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
+            סמל מוסד
+          </label>
           <input
             value={institutionCode}
             onChange={e => setInstitutionCode(e.target.value)}
             placeholder="הכנס סמל מוסד"
             disabled={codeReady}
+            style={inputStyle}
           />
         </div>
 
         {/* שם בית הספר */}
-        <div className="fg">
-          <label>שם בית הספר</label>
+        <div style={{ textAlign: 'right', marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
+            שם בית הספר
+          </label>
           <input
             value={school}
             onChange={e => setSchool(e.target.value)}
             placeholder="שם בית הספר"
             disabled={codeReady}
+            style={inputStyle}
           />
         </div>
 
         {/* שם מנהל/ת */}
-        <div className="fg">
-          <label>שם מנהל/ת בית הספר</label>
+        <div style={{ textAlign: 'right', marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
+            שם מנהל/ת בית הספר
+          </label>
           <input
             value={principal}
             onChange={e => setPrincipal(e.target.value)}
             placeholder="שם מנהל/ת בית הספר"
             disabled={codeReady}
+            style={{ ...inputStyle, border: '2px solid #0d7c66', background: '#e8f5f2' }}
           />
         </div>
 
         {/* קוד אישי */}
-        <div className="fg" style={{ marginBottom: 6 }}>
-          <label>קוד אישי</label>
+        <div style={{ textAlign: 'right', marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
+            קוד אישי
+          </label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
-              placeholder="קוד לבחירתך"
               disabled={codeReady}
-              style={{ flex: 1, letterSpacing: 2, fontFamily: 'monospace', fontSize: '1rem', border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px', background: 'var(--gray-light)' }}
+              style={{ ...inputStyle, flex: 1, letterSpacing: 2, textAlign: 'center', fontFamily: 'monospace' }}
             />
             {!codeReady && (
               <button
                 onClick={() => setCode(generateCode())}
-                style={{ flexShrink: 0, padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--gray-light)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'Heebo', fontWeight: 700 }}>
+                style={{ padding: '10px 12px', borderRadius: 9, border: '1.5px solid #e0e6ed', background: '#f3f4f6', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'Heebo, sans-serif' }}>
                 🎲 אוטומטי
               </button>
             )}
           </div>
-          <p style={{ fontSize: '0.72rem', color: 'var(--gray)', marginTop: 5, textAlign: 'right' }}>
+          <p style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: 5, textAlign: 'right', fontFamily: 'Heebo, sans-serif' }}>
             מומלץ: שם + מספר, למשל <strong>tamar42</strong>
           </p>
         </div>
@@ -180,7 +220,7 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
         <div className="divider">או</div>
         <button
           onClick={onAdmin}
-          style={{ width: '100%', padding: 9, background: 'none', border: '1.5px dashed var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--gray)', fontSize: '0.78rem', fontFamily: 'Heebo' }}>
+          style={{ width: '100%', padding: 9, background: 'none', border: '1.5px dashed var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--gray)', fontSize: '0.78rem', fontFamily: 'Heebo, sans-serif' }}>
           🔐 כניסת מנהל מערכת
         </button>
 
