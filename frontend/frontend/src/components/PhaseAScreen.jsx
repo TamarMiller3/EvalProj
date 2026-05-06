@@ -1,12 +1,12 @@
 import { Topbar } from './Topbar';
 import { Section } from './Section';
-import { ScaleWidget, ScaleLegend } from './ScaleWidget';
+
 import { BottomNav } from './BottomNav';
 import { TARGET_OPTIONS, DOMAIN_OPTIONS } from '../constants/formFields';
 
 export function PhaseAScreen({ eval: ev, onNext, active }) {
   const { userName, userCode, userSchool, fields, setField, checks, setCheck,
-          scales, setScale, notes, setNote, scores, save, saving } = ev;
+          notes, setNote, scores, save, saving } = ev;
 
   const checkboxes = [
     { id: 'c1',  label: 'בוצע מיפוי צרכים מסודר (נתוני הישגים, שאלונים, ראיונות)' },
@@ -108,9 +108,9 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
         </Section>
 
         <Section icon="✅" iconBg="#eafaf1" title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
-          <div className="scale-item">
-            <div className="scale-label">הלימה בין מטרות התוכנית לצורך הבית-ספרי</div>
-            <ScaleWidget scaleKey="fit" value={scales.fit} onChange={setScale} />
+          <div className="ci">
+            <input type="checkbox" id="fit-check" checked={!!checks['fit-check']} onChange={e => setCheck('fit-check', e.target.checked)} />
+            <label htmlFor="fit-check">קיימת הלימה בין מטרות התוכנית לצורך הבית-ספרי</label>
           </div>
           {checks2.map(c => (
             <div key={c.id} className="ci">
