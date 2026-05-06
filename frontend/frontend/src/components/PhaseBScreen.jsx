@@ -26,9 +26,8 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <div className="pb-num">{scores[1]}%</div>
         </div>
 
-        <ScaleLegend />
-
         <Section icon="📅" iconBg="#e8f5f2" title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
+          <ScaleLegend />
           {[
             { key: 'reg1', label: 'קיום המפגשים', sub: 'מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי' },
             { key: 'reg2', label: 'מספר המשתתפים — האם קהל היעד אכן משתתף?' },
@@ -44,6 +43,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
         </Section>
 
         <Section icon="🌟" iconBg="#fef3e2" title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
+          <ScaleLegend />
           {[
             { key: 'qu1', label: 'תכנון המפגשים' },
             { key: 'qu2', label: 'התאמת המנחה לרציונל התוכנית', sub: 'מיומנויות, גישה פדגוגית, קשר עם תלמידים' },
@@ -61,6 +61,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
         </Section>
 
         <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים לשינוי?">
+          <ScaleLegend />
           {[
             { key: 'pr1', label: 'שיפור לימודי — עדויות לשינוי בהישגים' },
             { key: 'pr2', label: 'שיפור רגשי-חברתי — שינוי בהתנהגות / אקלים' },
