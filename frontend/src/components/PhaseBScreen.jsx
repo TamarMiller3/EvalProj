@@ -26,10 +26,9 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <div className="pb-num">{scores[1]}%</div>
         </div>
 
-        <ScaleLegend />
-
-        {/* סדירות וכמות — 2 סעיפים */}
+        {/* סדירות וכמות */}
         <Section icon="📅" iconBg="#e8f5f2" title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
+          <ScaleLegend />
           {[
             { key: 'reg1', label: 'המפגשים התקיימו באופן סדיר', sub: 'מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי' },
             { key: 'reg2', label: 'כל קהל היעד השתתף בכל המפגשים', sub: 'במידה והיו ביטולים / נשירה — פרטו את הסיבות בהערות' },
@@ -45,6 +44,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
 
         {/* איכות הביצוע */}
         <Section icon="🌟" iconBg="#fef3e2" title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
+          <ScaleLegend />
           {[
             { key: 'qu1', label: 'תכנון המפגשים' },
             { key: 'qu2', label: 'התאמת המנחה לרציונל התוכנית', sub: 'מיומנויות, גישה פדגוגית, קשר עם תלמידים' },
@@ -61,8 +61,9 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n6} onChange={e => setNote('n6', e.target.value)} placeholder="מה עובד טוב? מה בעייתי?" />
         </Section>
 
-        {/* סימני התקדמות — 2 סעיפים */}
+        {/* סימני התקדמות */}
         <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים ראשוניים לשינוי?">
+          <ScaleLegend />
           {[
             { key: 'pr1', label: 'קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר במסגרת התוכנית' },
             { key: 'pr2', label: 'תשתיות ומשאבים מספיקים להמשך הפעלת התוכנית' },
