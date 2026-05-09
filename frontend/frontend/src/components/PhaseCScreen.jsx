@@ -46,7 +46,7 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
 
         <Section icon="💡" iconBg="#e8eef8" title="לקחים, תובנות והמלצות" desc="מה למדנו? מה היה שונה?">
           <span className="nl">🔴 מה לא עבד:</span>
-          <textarea className="na" value={notes.n9}  onChange={e => setNote('n9',  e.target.value)} placeholder="מה נכשל? מה היה קשה?" />
+          <textarea className="na" value={notes.n9}  onChange={e => setNote('n9',  e.target.value)} placeholder="מה אתגר? מה היה קשה?" />
           <span className="nl" style={{ marginTop: 10 }}>✅ מה עבד טוב:</span>
           <textarea className="na" value={notes.n10} onChange={e => setNote('n10', e.target.value)} placeholder="מה הצליח? מה לשכפל?" />
           <span className="nl" style={{ marginTop: 10 }}>🔄 המלצה לשנה הבאה:</span>
