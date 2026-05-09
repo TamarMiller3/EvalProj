@@ -1,14 +1,14 @@
 import { VERBALS } from './formFields';
 
-// שלב א׳: 18 צ'קבוקסים + סולם הלימה (fit) = 19 פריטים
-export function calcPhase1Score(checks, scales) {
-  const total = 19;
-  const checked = Object.values(checks).filter(Boolean).length;
-  const fitScore = scales?.fit ? (scales.fit - 1) / 3 : 0;
-  return Math.round((checked + fitScore) / total * 100);
+// שלב א׳: 18 צ'קבוקסים + c19 (הלימה) = 19 פריטים
+export function calcPhase1Score(checks) {
+  const keys = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10',
+    'c11','c12','c13','c14','c15','c16','c17','c18','c19'];
+  const checked = keys.filter(k => checks[k]).length;
+  return Math.round((checked / keys.length) * 100);
 }
 
-// שלב ב׳: 9 סעיפים (reg1,reg2,qu1-qu5,pr1,pr2)
+// שלב ב׳: 9 סעיפים
 export function calcPhase2Score(scales) {
   const keys = ['reg1','reg2','qu1','qu2','qu3','qu4','qu5','pr1','pr2'];
   const weight = 100 / keys.length;
@@ -17,7 +17,7 @@ export function calcPhase2Score(scales) {
   return Math.round(sum);
 }
 
-// שלב ג׳: 3 סעיפים (out1,out2,out4)
+// שלב ג׳: 3 סעיפים
 export function calcPhase3Score(scales) {
   const keys = ['out1','out2','out4'];
   const weight = 100 / keys.length;
@@ -58,7 +58,6 @@ export function generateInsights(data, scores) {
   const insights = [], actions = [], dataRecs = [];
   const [p1, p2, p3] = scores;
 
-  // Insights
   if (p1 >= 80) insights.push('✅ שלב ההכנה תוכנן היטב — רוב הרכיבים הבסיסיים מולאו.');
   else if (p1 >= 60) insights.push('🟡 שלב ההכנה מולא חלקית — ישנם רכיבים חשובים שטרם הושלמו.');
   else if (p1 > 0) insights.push('🔴 שלב ההכנה דורש השלמה משמעותית — חסרים מדדים יסודיים.');
@@ -75,7 +74,6 @@ export function generateInsights(data, scores) {
   if (!data.checks?.c18) insights.push('🎯 לא נקבע יעד מדיד — קשה להעריך הצלחה ללא יעד כמותי מוגדר.');
   if (!insights.length) insights.push('מלאו שאלות בשלבים הקודמים לקבלת תובנות.');
 
-  // Actions
   const sc = data.scales || {};
   if (sc.reg1 && sc.reg1 < 3) actions.push('בררו את הגורמים לביטולים ולנשירה — שוחחו עם המנחה ועם התלמידים.');
   if (sc.reg2 && sc.reg2 < 3) actions.push('בדקו האם קהל היעד המקורי עדיין משתתף — שקלו גיוס מחדש.');
@@ -90,7 +88,6 @@ export function generateInsights(data, scores) {
   if (data.decision === 'stop') actions.push('תעדו את הלקחים: מה לא עבד ולמה — כדי להימנע מכך בעתיד.');
   if (!actions.length && p1 + p2 + p3 > 0) actions.push('המשיכו לעקוב אחר ההתקדמות ולתעד ממצאים לאורך הדרך.');
 
-  // Data recommendations
   const ch = data.checks || {};
   if (!ch.c4) dataRecs.push('בצעו מדידת בסיס: שאלון, מבחן אבחון, או ציוני כניסה — לפני המפגש הבא.');
   if (!ch.c16) dataRecs.push('הגדירו כלי הערכה ספציפי: שאלון תלמידים, תצפית מובנית, או מבחן ידע.');
