@@ -9,27 +9,27 @@ const initNotes  = () => Object.fromEntries(NOTES.map(k => [k, '']));
 const initFields = () => Object.fromEntries(FIELDS.map(k => [k, '']));
 
 export function useEvaluation() {
-  const [userCode,      setUserCode]      = useState(null);
-  const [userName,      setUserName]      = useState('');
-  const [userSchool,    setUserSchool]    = useState('');
-  const [userPrincipal, setUserPrincipal] = useState(''); // ✅ נוסף
-  const [fields,        setFields]        = useState(initFields());
-  const [checks,        setChecks]        = useState(initChecks());
-  const [scales,        setScales]        = useState(initScales());
-  const [notes,         setNotes]         = useState(initNotes());
-  const [decision,      setDecision]      = useState('');
-  const [saving,        setSaving]        = useState(false);
-  const [lastSaved,     setLastSaved]     = useState(null);
+  const [userCode, setUserCode]           = useState(null);
+  const [userName, setUserName]           = useState('');
+  const [userSchool, setUserSchool]       = useState('');
+  const [userPrincipal, setUserPrincipal] = useState('');
+  const [fields, setFields]               = useState(initFields());
+  const [checks, setChecks]               = useState(initChecks());
+  const [scales, setScales]               = useState(initScales());
+  const [notes, setNotes]                 = useState(initNotes());
+  const [decision, setDecision]           = useState('');
+  const [saving, setSaving]               = useState(false);
+  const [lastSaved, setLastSaved]         = useState(null);
   const autoSaveTimer                     = useRef(null);
 
   const scores = [
-    calcPhase1Score(checks, scales),
+    calcPhase1Score(checks),
     calcPhase2Score(scales),
     calcPhase3Score(scales)
   ];
 
   const collectData = useCallback(() => ({
-    userCode, userName, userSchool, userPrincipal, // ✅ נוסף
+    userCode, userName, userSchool, userPrincipal,
     fields, checks, scales, notes, decision,
     savedAt: new Date().toISOString(),
     phase1_pct: scores[0],
@@ -78,23 +78,22 @@ export function useEvaluation() {
   };
 
   const loadData = (data) => {
-    if (data.userPrincipal) setUserPrincipal(data.userPrincipal); // ✅ נוסף
-    if (data.fields)   setFields(prev => ({ ...initFields(), ...data.fields }));
-    if (data.checks)   setChecks(prev => ({ ...initChecks(), ...data.checks }));
-    if (data.scales)   setScales(prev => ({ ...initScales(), ...data.scales }));
-    if (data.notes)    setNotes(prev => ({ ...initNotes(), ...data.notes }));
-    if (data.decision) setDecision(data.decision);
+    if (data.fields)      setFields(prev => ({ ...initFields(), ...data.fields }));
+    if (data.checks)      setChecks(prev => ({ ...initChecks(), ...data.checks }));
+    if (data.scales)      setScales(prev => ({ ...initScales(), ...data.scales }));
+    if (data.notes)       setNotes(prev => ({ ...initNotes(), ...data.notes }));
+    if (data.decision)    setDecision(data.decision);
   };
 
   return {
-    userCode,      setUserCode,
-    userName,      setUserName,
-    userSchool,    setUserSchool,
-    userPrincipal, setUserPrincipal, // ✅ נוסף
-    fields,  setField,
-    checks,  setCheck,
-    scales,  setScale,
-    notes,   setNote,
+    userCode, setUserCode,
+    userName, setUserName,
+    userSchool, setUserSchool,
+    userPrincipal, setUserPrincipal,
+    fields, setField,
+    checks, setCheck,
+    scales, setScale,
+    notes, setNote,
     decision, setDecision,
     scores, saving, lastSaved,
     save, scheduleSave, loadData, collectData
