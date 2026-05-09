@@ -10,7 +10,6 @@ import './styles/global.css';
 
 export default function App() {
   const [screen, setScreen] = useState('landing');
-  const [prevScreen, setPrev] = useState(null);
   const [toast, setToast] = useState({ msg: '', show: false, color: 'var(--navy)' });
   const evalState = useEvaluation();
 
@@ -30,7 +29,6 @@ export default function App() {
   }
 
   function goTo(nextScreen) {
-    setPrev(screen);
     setScreen(nextScreen);
   }
 
@@ -38,7 +36,7 @@ export default function App() {
     evalState.setUserCode(code);
     evalState.setUserName(name);
     evalState.setUserSchool(school);
-    evalState.setUserPrincipal(principal); // ✅ עובד עכשיו
+    evalState.setUserPrincipal(principal);
     goTo('phase0');
   }
 
@@ -46,7 +44,7 @@ export default function App() {
     evalState.setUserCode(code);
     evalState.setUserName(data.userName || '');
     evalState.setUserSchool(data.userSchool || '');
-    evalState.setUserPrincipal(data.userPrincipal || ''); // ✅ נוסף
+    evalState.setUserPrincipal(data.userPrincipal || '');
     evalState.loadData(data);
     goTo('phase0');
     showToast('✅ ברוך/ה השב/ה! הנתונים נטענו', 'var(--teal)');
@@ -74,7 +72,6 @@ export default function App() {
         onPrev={() => { ev.save(false); goTo('phase2'); }} />
       <AdminScreen active={screen === 'admin'} onBack={() => goTo('landing')} />
 
-      {/* Toast */}
       <div className={`toast${toast.show ? ' show' : ''}`} style={{ background: toast.color }}>
         {toast.msg}
       </div>
