@@ -2,29 +2,26 @@ import { useState } from 'react';
 import { api } from '../api';
 import { generateCode } from '../constants/scoreCalc';
 
-const LOGO1 = 'https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg';
-const LOGO2 = 'https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg';
-
 export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
-  const [institutionCode, setInstitutionCode] = useState('');
-  const [school, setSchool]                   = useState('');
-  const [principal, setPrincipal]             = useState('');
-  const [code, setCode]                       = useState(generateCode);
-  const [returnCode, setReturnCode]           = useState('');
-  const [codeReady, setCodeReady]             = useState(false);
-  const [error, setError]                     = useState('');
-  const [returnError, setReturnError]         = useState('');
-  const [loading, setLoading]                 = useState(false);
+  const [name, setName]             = useState('');
+  const [school, setSchool]         = useState('');
+  const [principal, setPrincipal]   = useState('');
+  const [code, setCode]             = useState(generateCode);
+  const [returnCode, setReturnCode] = useState('');
+  const [codeReady, setCodeReady]   = useState(false);
+  const [error, setError]           = useState('');
+  const [returnError, setReturnError] = useState('');
+  const [loading, setLoading]       = useState(false);
 
   async function handleCreate() {
-    if (!institutionCode) return setError('יש להכניס סמל מוסד');
-    if (!school)          return setError('יש להכניס שם בית הספר');
-    if (!principal)       return setError('יש להכניס שם מנהל/ת בית הספר');
+    if (!name)      return setError('יש להכניס סמל מוסד');
+    if (!school)    return setError('יש להכניס שם בית הספר');
+    if (!principal) return setError('יש להכניס שם מנהל/ת');
     if (!code || code.length < 3) return setError('הקוד חייב להכיל לפחות 3 תווים');
     setLoading(true);
     setError('');
     try {
-      await api.createEvaluation(code.toUpperCase(), institutionCode, school);
+      await api.createEvaluation(code.toUpperCase(), name, school);
       setCodeReady(true);
     } catch (e) {
       setError(e.message === 'קוד זה כבר תפוס' ? 'קוד זה כבר תפוס — נסה/י קוד אחר' : e.message);
@@ -48,151 +45,93 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     }
   }
 
-  // ✅ תיקון מובייל: fontSize מוגדר בדיוק 16px בכל שדות הקלט
-  // (מתחת ל-16px הטלפון מזום אוטומטית בעת הקלדה)
-  const inputStyle = {
-    width: '100%',
-    border: '2px solid #e0e6ed',
-    borderRadius: 10,
-    padding: '11px 13px',
-    fontSize: '16px',
-    background: '#f3f4f6',
-    boxSizing: 'border-box',
-    fontFamily: 'Heebo, sans-serif',
-    direction: 'rtl',
-    outline: 'none',
-    WebkitAppearance: 'none',
-  };
-
   return (
-    <div style={{
-      background: 'linear-gradient(140deg,#1a2744 0%,#0d3d5e 55%,#0d7c66 100%)',
-height: '100vh',
-overflowY: 'auto',  
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      // ✅ תיקון מובייל: ריפוד מינימלי שמונע גלישה מחוץ למסך
-      padding: '12px',
-      direction: 'rtl',
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: 24,
-        // ✅ תיקון מובייל: ריפוד מצטמצם אוטומטית במסך קטן
-        padding: 'clamp(20px, 5vw, 44px) clamp(16px, 6vw, 40px)',
-        maxWidth: 460,
-        width: '100%',
-        textAlign: 'center',
-        boxSizing: 'border-box',
-      }}>
+    <div className="screen landing-screen" style={{ display: 'flex' }}>
+      <div className="landing-card">
 
-        {/* לוגואים */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <img src={LOGO1} style={{ height: 52, objectFit: 'contain' }} alt="לוגו" />
-          <img src={LOGO2} style={{ height: 52, objectFit: 'contain' }} alt="לוגו" />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"
+               alt="היחידה לתכנון, פיתוח והערכה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
+          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg"
+               alt="משרד החינוך מחוז חיפה" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
         </div>
 
-        <div style={{ fontSize: 32, marginBottom: 6 }}>🎓</div>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1a2744', marginBottom: 6, fontFamily: 'Heebo, sans-serif' }}>
+        <div style={{ fontSize: '2rem', marginBottom: 4 }}>🎓</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--navy)', marginBottom: 5 }}>
           הערכת תוכניות חינוכיות
-        </h1>
-        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 28, lineHeight: 1.6, fontFamily: 'Heebo, sans-serif' }}>
+        </div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--gray)', marginBottom: 32, lineHeight: 1.6 }}>
           התבוננות מעמיקה על יישום תוכנית בית ספרית<br />לשימוש מנהלים ואנשי צוות
-        </p>
+        </div>
 
-        {/* חזרה עם קוד קיים */}
-        <div style={{ background: '#e8f5f2', border: '2px solid #0d7c66', borderRadius: 14, padding: 14, marginBottom: 18 }}>
-          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0d7c66', marginBottom: 10, fontFamily: 'Heebo, sans-serif' }}>
-            🔄 כבר יש לך קוד?
+        {/* כניסה עם קוד קיים */}
+        <div style={{ background: '#e8f5f2', border: '2px solid var(--teal)', borderRadius: 14, padding: 16, marginBottom: 18 }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--teal)', marginBottom: 10 }}>
+            🔄 כבר יש לך קוד? הכנס/י כאן
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               value={returnCode}
-              onChange={e => setReturnCode(e.target.value)}
+              onChange={e => setReturnCode(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === 'Enter' && handleResume()}
+              onPaste={e => {
+                e.preventDefault();
+                const text = e.clipboardData.getData('text').trim().toUpperCase();
+                setReturnCode(text);
+              }}
               placeholder="הקוד שקיבלת"
-              style={{ ...inputStyle, flex: 1, letterSpacing: 2, textAlign: 'center', background: 'white', border: '2px solid #0d7c66' }}
+              style={{ flex: 1, border: '2px solid var(--teal)', borderRadius: 10, padding: '10px 13px',
+                       fontFamily: 'Heebo', fontSize: '1rem', letterSpacing: 2, textAlign: 'center',
+                       background: 'white', outline: 'none' }}
             />
-            <button
-              onClick={handleResume}
-              disabled={loading}
-              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#0d7c66', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Heebo, sans-serif', whiteSpace: 'nowrap' }}>
+            <button onClick={handleResume} disabled={loading}
+              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--teal)',
+                       color: 'white', fontFamily: 'Heebo', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer' }}>
               המשך ←
             </button>
           </div>
-          {returnError && <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: 6 }}>❌ {returnError}</p>}
+          {returnError && <p className="err-line" style={{ marginTop: 8 }}>❌ {returnError}</p>}
         </div>
 
-        {/* מפריד */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0', color: '#6b7280', fontSize: '0.78rem', fontFamily: 'Heebo, sans-serif' }}>
-          <span style={{ flex: 1, height: 1, background: '#e0e6ed' }} />
-          או — הרשמה ראשונה
-          <span style={{ flex: 1, height: 1, background: '#e0e6ed' }} />
+        <div className="divider">או — הרשמה ראשונה</div>
+
+        <div className="fg">
+          <label>סמל מוסד</label>
+          <input value={name} onChange={e => setName(e.target.value)}
+                 placeholder="הכנס/י את סמל המוסד" disabled={codeReady} />
         </div>
 
-        {/* סמל מוסד */}
-        <div style={{ textAlign: 'right', marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
-            סמל מוסד
-          </label>
-          <input
-            value={institutionCode}
-            onChange={e => setInstitutionCode(e.target.value)}
-            placeholder="הכנס סמל מוסד"
-            disabled={codeReady}
-            style={inputStyle}
-          />
+        <div className="fg">
+          <label>שם בית הספר</label>
+          <input value={school} onChange={e => setSchool(e.target.value)}
+                 placeholder="שם בית הספר" disabled={codeReady} />
         </div>
 
-        {/* שם בית הספר */}
-        <div style={{ textAlign: 'right', marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
-            שם בית הספר
-          </label>
-          <input
-            value={school}
-            onChange={e => setSchool(e.target.value)}
-            placeholder="שם בית הספר"
-            disabled={codeReady}
-            style={inputStyle}
-          />
+        <div className="fg">
+          <label>שם מנהל/ת בית הספר</label>
+          <input value={principal} onChange={e => setPrincipal(e.target.value)}
+                 placeholder="שם מנהל/ת" disabled={codeReady} />
         </div>
 
-        {/* שם מנהל/ת */}
-        <div style={{ textAlign: 'right', marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
-            שם מנהל/ת בית הספר
-          </label>
-          <input
-            value={principal}
-            onChange={e => setPrincipal(e.target.value)}
-            placeholder="שם מנהל/ת בית הספר"
-            disabled={codeReady}
-            style={{ ...inputStyle, border: '2px solid #0d7c66', background: '#e8f5f2' }}
-          />
-        </div>
-
-        {/* קוד אישי */}
-        <div style={{ textAlign: 'right', marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#1a2744', marginBottom: 5, opacity: 0.7, fontFamily: 'Heebo, sans-serif' }}>
-            קוד אישי
-          </label>
+        <div className="fg" style={{ marginBottom: 6 }}>
+          <label>קוד אישי</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              value={code}
-              onChange={e => setCode(e.target.value.toUpperCase())}
-              disabled={codeReady}
-              style={{ ...inputStyle, flex: 1, letterSpacing: 2, textAlign: 'center', fontFamily: 'monospace' }}
+            <input value={code} onChange={e => setCode(e.target.value.toUpperCase())}
+              placeholder="קוד לבחירתך" disabled={codeReady}
+              style={{ flex: 1, letterSpacing: 2, fontFamily: 'monospace', fontSize: '1rem',
+                       border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px',
+                       background: 'var(--gray-light)' }}
             />
             {!codeReady && (
-              <button
-                onClick={() => setCode(generateCode())}
-                style={{ padding: '10px 12px', borderRadius: 9, border: '1.5px solid #e0e6ed', background: '#f3f4f6', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'Heebo, sans-serif' }}>
+              <button onClick={() => setCode(generateCode())}
+                style={{ flexShrink: 0, padding: '10px 12px', borderRadius: 9,
+                         border: '1.5px solid var(--border)', background: 'var(--gray-light)',
+                         cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'Heebo', fontWeight: 700 }}>
                 🎲 אוטומטי
               </button>
             )}
           </div>
-          <p style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: 5, textAlign: 'right', fontFamily: 'Heebo, sans-serif' }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--gray)', marginTop: 5, textAlign: 'right' }}>
             מומלץ: שם + מספר, למשל <strong>tamar42</strong>
           </p>
         </div>
@@ -209,22 +148,19 @@ overflowY: 'auto',
           <>
             <div className="code-display">{code}</div>
             <div className="code-warn">⚠️ <strong>שמור/י את הקוד!</strong> תצטרך/י אותו כדי לחזור ולהמשיך.</div>
-            <button
-              className="btn-main"
-              style={{ background: 'linear-gradient(135deg,#1a2744,#243052)' }}
-              onClick={() => onNewUser(code, institutionCode, school, principal)}>
+            <button className="btn-main" style={{ background: 'linear-gradient(135deg,#1a2744,#243052)' }}
+              onClick={() => onNewUser(code, name, school, principal)}>
               ← המשך למילוי ההערכה
             </button>
           </>
         )}
 
         <div className="divider">או</div>
-        <button
-          onClick={onAdmin}
-          style={{ width: '100%', padding: 9, background: 'none', border: '1.5px dashed var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--gray)', fontSize: '0.78rem', fontFamily: 'Heebo, sans-serif' }}>
+        <button onClick={onAdmin}
+          style={{ width: '100%', padding: 9, background: 'none', border: '1.5px dashed var(--border)',
+                   borderRadius: 8, cursor: 'pointer', color: 'var(--gray)', fontSize: '0.78rem', fontFamily: 'Heebo' }}>
           🔐 כניסת מנהל מערכת
         </button>
-
       </div>
     </div>
   );
