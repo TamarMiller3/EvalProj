@@ -1,8 +1,7 @@
 export const CHECKS = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10',
-  'c11','c12','c13','c14','c15','c16','c17','c18'];
+  'c11','c12','c13','c14','c15','c16','c17','c18','c19'];
 
-// reg3, pr3, out3 הוסרו; fit נשאר
-export const SCALES = ['fit','reg1','reg2','qu1','qu2','qu3','qu4','qu5',
+export const SCALES = ['reg1','reg2','qu1','qu2','qu3','qu4','qu5',
   'pr1','pr2','out1','out2','out4'];
 
 export const NOTES = ['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'];
