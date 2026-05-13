@@ -3,19 +3,17 @@ import { api } from '../api';
 import { generateCode } from '../constants/scoreCalc';
 
 export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
-  const [name, setName]             = useState('');
-  const [school, setSchool]         = useState('');
-  const [principal, setPrincipal]   = useState('');
-  const [code, setCode]             = useState(generateCode);
-  const [codeReady, setCodeReady]   = useState(false);
-  const [error, setError]           = useState('');
-  const [loading, setLoading]       = useState(false);
+  const [name, setName]           = useState('');
+  const [school, setSchool]       = useState('');
+  const [principal, setPrincipal] = useState('');
+  const [codeReady, setCodeReady] = useState(false);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
 
-  // חיפוש לפי סמל מוסד
-  const [searchSymbol, setSearchSymbol] = useState('');
-  const [searchResults, setSearchResults] = useState(null); // null = לא חיפשנו, [] = אין תוצאות
+  const [searchSymbol, setSearchSymbol]   = useState('');
+  const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState('');
+  const [searchError, setSearchError]     = useState('');
 
   async function handleSearch() {
     if (!searchSymbol.trim()) return setSearchError('יש להכניס סמל מוסד');
@@ -24,15 +22,11 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     setSearchResults(null);
     try {
       const results = await api.getBySchool(searchSymbol.trim());
-
       if (results.length === 0) {
-        // לא נמצא
         setSearchError('לא נמצאו הערכות עבור סמל מוסד זה');
       } else if (results.length === 1) {
-        // תוצאה אחת — טוען ישירות
         onReturnUser(results[0].userCode || results[0].code, results[0]);
       } else {
-        // מספר תוכניות — מציג רשימה לבחירה
         setSearchResults(results);
       }
     } catch (e) {
@@ -42,23 +36,18 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     }
   }
 
-  function handleSelectEval(item) {
-    onReturnUser(item.userCode || item.code, item);
-  }
-
   async function handleCreate() {
     if (!name)      return setError('יש להכניס סמל מוסד');
     if (!school)    return setError('יש להכניס שם בית הספר');
     if (!principal) return setError('יש להכניס שם מנהל/ת');
-    if (!code || code.length < 3) return setError('הקוד חייב להכיל לפחות 3 תווים');
     setLoading(true);
     setError('');
+    const code = generateCode();
     try {
-      await api.createEvaluation(code.toUpperCase(), name, school);
-      setCodeReady(true);
+      await api.createEvaluation(code, name, school);
+      onNewUser(code, name, school, principal);
     } catch (e) {
-      setError(e.message === 'קוד זה כבר תפוס' ? 'קוד זה כבר תפוס — נסה/י קוד אחר' : e.message);
-    } finally {
+      setError(e.message === 'קוד זה כבר תפוס' ? 'אירעה שגיאה, נסה/י שנית' : e.message);
       setLoading(false);
     }
   }
@@ -73,29 +62,25 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
       <div className="landing-card">
 
         {/* לוגואים */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <img
-            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"
-            alt="היחידה לתכנון, פיתוח והערכה"
-            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
-          />
-          <img
-            src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg"
-            alt="משרד החינוך מחוז חיפה"
-            style={{ height: 56, width: 'auto', objectFit: 'contain' }}
-          />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_rqrmkh.jpg"
+               alt="היחידה לתכנון, פיתוח והערכה"
+               style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
+          <img src="https://res.cloudinary.com/dpwmxprpp/image/upload/v1775323207/WhatsApp_Image_2026-04-04_at_20.18.42_1_h3k117.jpg"
+               alt="משרד החינוך מחוז חיפה"
+               style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
         </div>
 
-        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--navy)', marginBottom: 5 }}>
+        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--navy)', marginBottom: 6 }}>
           הערכת תוכניות חינוכיות
         </div>
-        <div style={{ fontSize: '0.88rem', color: 'var(--gray)', marginBottom: 24, lineHeight: 1.6 }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--gray)', marginBottom: 24, lineHeight: 1.6 }}>
           התבוננות מעמיקה על יישום תוכנית בית ספרית
         </div>
 
-        {/* ===== חזרה לדוח קיים ===== */}
+        {/* חזרה לדוח קיים */}
         <div style={{ background: '#e8f5f2', border: '2px solid var(--teal)', borderRadius: 14, padding: 16, marginBottom: 18 }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--teal)', marginBottom: 10, textAlign: 'right' }}>
+          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--teal)', marginBottom: 10, textAlign: 'right' }}>
             חזרה לדוח קיים — חיפוש לפי סמל מוסד
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -109,37 +94,34 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
                        background: 'white', outline: 'none' }}
             />
             <button onClick={handleSearch} disabled={searchLoading}
-              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--teal)',
-                       color: 'white', fontFamily: 'Heebo', fontSize: '0.88rem', fontWeight: 700,
+              style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--teal)',
+                       color: 'white', fontFamily: 'Heebo', fontSize: '0.9rem', fontWeight: 700,
                        cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {searchLoading ? '...' : 'חפש'}
             </button>
           </div>
 
           {searchLoading && (
-            <p style={{ fontSize: '0.78rem', color: 'var(--teal)', marginTop: 8, textAlign: 'right' }}>
+            <p style={{ fontSize: '0.76rem', color: 'var(--teal)', marginTop: 8, textAlign: 'right' }}>
               מחפש... ייתכן שהשרת מתעורר, אנא המתן עד 30 שניות
             </p>
           )}
-
           {searchError && (
             <p style={{ color: 'var(--red)', fontSize: '0.8rem', marginTop: 8, textAlign: 'right' }}>
               {searchError}
             </p>
           )}
 
-          {/* רשימת תוצאות */}
-          {searchResults && searchResults.length > 0 && (
+          {searchResults && searchResults.length > 1 && (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textAlign: 'right' }}>
-                נמצאו {searchResults.length} הערכות — בחר/י:
+                נמצאו {searchResults.length} תוכניות — בחר/י:
               </div>
               {searchResults.map((item, i) => (
-                <div key={i}
-                  style={{ background: 'white', borderRadius: 8, padding: '10px 12px', marginBottom: 6,
-                           border: '1.5px solid var(--border)', display: 'flex',
-                           justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => handleSelectEval(item)}
+                <div key={i} style={{ background: 'white', borderRadius: 8, padding: '10px 12px', marginBottom: 6,
+                                      border: '1.5px solid var(--border)', display: 'flex',
+                                      justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => onReturnUser(item.userCode || item.code, item)}
                     style={{ padding: '6px 14px', borderRadius: 7, border: 'none', background: 'var(--teal)',
                              color: 'white', fontFamily: 'Heebo', fontSize: '0.8rem',
                              fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
@@ -150,8 +132,7 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
                       {item.fields?.['f-prog'] || 'ללא שם תוכנית'}
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--gray)', marginTop: 2 }}>
-                      {item.userSchool && `${item.userSchool} | `}
-                      עדכון אחרון: {formatDate(item.savedAt)}
+                      {item.userSchool && `${item.userSchool} | `}עדכון: {formatDate(item.savedAt)}
                     </div>
                   </div>
                 </div>
@@ -164,66 +145,28 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
 
         <div className="fg">
           <label>סמל מוסד</label>
-          <input value={name} onChange={e => setName(e.target.value)}
-                 placeholder="הכנס/י את סמל המוסד" disabled={codeReady} />
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="הכנס/י את סמל המוסד" />
         </div>
-
         <div className="fg">
           <label>שם בית הספר</label>
-          <input value={school} onChange={e => setSchool(e.target.value)}
-                 placeholder="שם בית הספר" disabled={codeReady} />
+          <input value={school} onChange={e => setSchool(e.target.value)} placeholder="שם בית הספר" />
         </div>
-
         <div className="fg">
           <label>שם מנהל/ת בית הספר</label>
-          <input value={principal} onChange={e => setPrincipal(e.target.value)}
-                 placeholder="שם מנהל/ת" disabled={codeReady} />
+          <input value={principal} onChange={e => setPrincipal(e.target.value)} placeholder="שם מנהל/ת" />
         </div>
 
-        <div className="fg" style={{ marginBottom: 6 }}>
-          <label>קוד אישי</label>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-              placeholder="קוד לבחירתך" disabled={codeReady}
-              style={{ flex: 1, letterSpacing: 2, fontFamily: 'monospace', fontSize: '1rem',
-                       border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px',
-                       background: 'var(--gray-light)' }}
-            />
-            {!codeReady && (
-              <button onClick={() => setCode(generateCode())}
-                style={{ flexShrink: 0, padding: '10px 12px', borderRadius: 9,
-                         border: '1.5px solid var(--border)', background: 'var(--gray-light)',
-                         cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'Heebo', fontWeight: 700 }}>
-                אוטומטי
-              </button>
-            )}
-          </div>
-        </div>
-
-        {error && <p className="err-line">❌ {error}</p>}
+        {error && <p className="err-line" style={{ marginBottom: 10 }}>❌ {error}</p>}
 
         {loading && (
-          <p style={{ fontSize: '0.78rem', color: 'var(--teal)', textAlign: 'center', margin: '8px 0' }}>
-            מתחבר לשרת, אנא המתן עד 30 שניות...
+          <p style={{ fontSize: '0.78rem', color: 'var(--teal)', textAlign: 'center', marginBottom: 10 }}>
+            מתחבר לשרת, אנא המתן...
           </p>
         )}
 
-        {!codeReady && (
-          <button className="btn-main" onClick={handleCreate} disabled={loading}>
-            {loading ? 'מתחבר...' : 'צור קוד והתחל/י'}
-          </button>
-        )}
-
-        {codeReady && (
-          <>
-            <div className="code-display">{code}</div>
-            <div className="code-warn">⚠️ <strong>שמור/י את הקוד!</strong> תצטרך/י אותו כדי לחזור ולהמשיך.</div>
-            <button className="btn-main" style={{ background: 'linear-gradient(135deg,#1a2744,#243052)' }}
-              onClick={() => onNewUser(code, name, school, principal)}>
-              המשך למילוי ההערכה
-            </button>
-          </>
-        )}
+        <button className="btn-main" onClick={handleCreate} disabled={loading}>
+          {loading ? 'מתחבר...' : 'צור קוד והתחל/י'}
+        </button>
 
         <div className="divider">או</div>
         <button onClick={onAdmin}
@@ -236,3 +179,4 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     </div>
   );
 }
+
