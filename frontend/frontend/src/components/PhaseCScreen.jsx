@@ -13,7 +13,6 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
 
       <div className="phase-content">
         <div className="ph-banner p3">
-          <span style={{ fontSize: '1.5rem' }}>🏁</span>
           <div>
             <h3>שלב ג׳ — הערכת סוף תוכנית <small style={{ fontWeight: 400, opacity: 0.7 }}>(מאי–יוני)</small></h3>
             <p>הערכה מסכמת — השוואה לנתוני הבסיס, לקחים והמלצות להמשך.</p>
@@ -28,15 +27,14 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
 
         <ScaleLegend labels={['לא הושג', 'הושג חלקית', 'הושג ברובו', 'הושג במלואו']} />
 
-        <Section icon="🎯" iconBg="#fef3e2" title="השגת יעדים ותוצאות" desc="השוואה בין נקודת הפתיחה לנקודת הסוף" defaultOpen>
+        <Section icon="📊" iconBg="#fef3e2" title="השגת יעדים ותוצאות" desc="השוואה בין נקודת הפתיחה לנקודת הסוף" defaultOpen>
           {[
-            { key: 'out1', label: 'שיפור לימודי — עד כמה חל שינוי לעומת נתוני הבסיס?' },
-            { key: 'out2', label: 'שיפור רגשי-חברתי-התנהגותי' },
-            { key: 'out3', label: 'שביעות רצון כוללת — תלמידים + צוות' },
-            { key: 'out4', label: 'יחס עלות–תועלת', sub: 'השקעה מול השפעה שנמדדה' },
-          ].map(({ key, label, sub }) => (
+            { key: 'out1', label: 'הושג שיפור בתחום הנבחר במסגרת התוכנית' },
+            { key: 'out2', label: 'שביעות הרצון של קהל היעד המשתתף בתוכנית גבוהה' },
+            { key: 'out4', label: 'התוצאות שהושגו מצביעות על כדאיות ההשקעה בתוכנית' },
+          ].map(({ key, label }) => (
             <div key={key} className="scale-item">
-              <div className="scale-label">{label}{sub && <span className="scale-sub">{sub}</span>}</div>
+              <div className="scale-label">{label}</div>
               <ScaleWidget scaleKey={key} value={scales[key]} onChange={setScale} />
             </div>
           ))}
@@ -45,11 +43,11 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
         </Section>
 
         <Section icon="💡" iconBg="#e8eef8" title="לקחים, תובנות והמלצות" desc="מה למדנו? מה היה שונה?">
-          <span className="nl">🔴 מה לא עבד:</span>
-          <textarea className="na" value={notes.n9}  onChange={e => setNote('n9',  e.target.value)} placeholder="מה אתגר? מה היה קשה?" />
-          <span className="nl" style={{ marginTop: 10 }}>✅ מה עבד טוב:</span>
+          <span className="nl">מה לא עבד:</span>
+          <textarea className="na" value={notes.n9} onChange={e => setNote('n9', e.target.value)} placeholder="מה האתגר?" />
+          <span className="nl" style={{ marginTop: 10 }}>מה עבד טוב:</span>
           <textarea className="na" value={notes.n10} onChange={e => setNote('n10', e.target.value)} placeholder="מה הצליח? מה לשכפל?" />
-          <span className="nl" style={{ marginTop: 10 }}>🔄 המלצה לשנה הבאה:</span>
+          <span className="nl" style={{ marginTop: 10 }}>המלצה לשנה הבאה:</span>
           <textarea className="na" value={notes.n11} onChange={e => setNote('n11', e.target.value)} placeholder="להמשיך? לשנות? להחליף?" />
         </Section>
       </div>
