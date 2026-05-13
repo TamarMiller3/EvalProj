@@ -3,13 +3,14 @@ import { Section } from './Section';
 import { ScaleWidget, ScaleLegend } from './ScaleWidget';
 import { BottomNav } from './BottomNav';
 
-export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
+export function PhaseBScreen({ eval: ev, onPrev, onNext, onNavigate, active }) {
   const { userName, userCode, userSchool, fields, scales, setScale, notes, setNote, scores, save, saving } = ev;
 
   return (
     <div className={`screen${active ? ' active' : ''}`}>
       <Topbar userName={userName} userCode={userCode} userSchool={userSchool}
-              fields={fields} currentPhase={1} scores={scores} onSave={() => save(true)} saving={saving} />
+              fields={fields} currentPhase={1} scores={scores}
+              onSave={() => save(true)} saving={saving} onNavigate={onNavigate} />
 
       <div className="phase-content">
         <div className="ph-banner p2">
@@ -25,7 +26,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <div className="pb-num">{scores[1]}%</div>
         </div>
 
-        <Section icon="📅" iconBg="#e8f5f2" title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
+        <Section title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
           <ScaleLegend />
           {[
             { key: 'reg1', label: 'המפגשים התקיימו באופן סדיר', sub: 'מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי' },
@@ -40,7 +41,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n5} onChange={e => setNote('n5', e.target.value)} placeholder="מספר מפגשים שהתקיימו, סיבות לביטולים..." />
         </Section>
 
-        <Section icon="🌟" iconBg="#fef3e2" title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
+        <Section title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
           <ScaleLegend />
           {[
             { key: 'qu1', label: 'תכנון המפגשים' },
@@ -58,7 +59,7 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n6} onChange={e => setNote('n6', e.target.value)} placeholder="מה עובד טוב? מה בעייתי?" />
         </Section>
 
-        <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים ראשוניים לשינוי?">
+        <Section title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים ראשוניים לשינוי?">
           <ScaleLegend />
           {[
             { key: 'pr1', label: 'קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר במסגרת התוכנית' },
