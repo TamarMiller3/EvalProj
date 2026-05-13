@@ -1,12 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const repo = require('../storage/controller');
+const store = require('../storage/store');
 
 // ✅ check if code exists
 router.get('/check/:code', async (req, res) => {
     try {
         const data = await repo.getEvaluation(req.params.code);
         return res.json({ exists: !!data });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+// ✅ חיפוש לפי סמל מוסד — מחזיר רשימה
+router.get('/by-school/:symbol', async (req, res) => {
+    try {
+        const docs = await store.getBySchool(req.params.symbol);
+        return res.json(docs);
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }
@@ -23,9 +34,9 @@ router.get('/:code', async (req, res) => {
     }
 });
 
-// ✅ create (בדיוק כמו שהיה — עם בדיקה לפני)
+// ✅ create
 router.post('/', async (req, res) => {
-    const { code, userName, userSchool, userPrincipal } = req.body;
+    const { code, userName, userSchool } = req.body;
 
     if (!code || !userName || !userSchool)
         return res.status(400).json({ error: 'חסרים שדות חובה' });
@@ -52,10 +63,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ✅ update (כמו set שהיה)
+// ✅ update
 router.put('/:code', async (req, res) => {
     const body = req.body;
-
     if (!body)
         return res.status(400).json({ error: 'אין נתונים לשמירה' });
     try {
@@ -65,5 +75,5 @@ router.put('/:code', async (req, res) => {
         return res.status(500).json({ error: e.message });
     }
 });
- 
+
 module.exports = router;
