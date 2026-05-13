@@ -1,12 +1,11 @@
 import { Topbar } from './Topbar';
 import { Section } from './Section';
-import { ScaleWidget } from './ScaleWidget';
 import { BottomNav } from './BottomNav';
 import { TARGET_OPTIONS, SENIORITY_OPTIONS, GOAL_OPTIONS, DOMAIN_OPTIONS } from '../constants/formFields';
 
-export function PhaseAScreen({ eval: ev, onNext, active }) {
+export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
   const { userName, userCode, userSchool, fields, setField, checks, setCheck,
-          scales, setScale, notes, setNote, scores, save, saving } = ev;
+          notes, setNote, scores, save, saving } = ev;
 
   const checkboxes1 = [
     { id: 'c1', label: 'הושלם תהליך מיפוי תמונת מצב בית ספרית' },
@@ -39,7 +38,8 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
   return (
     <div className={`screen${active ? ' active' : ''}`}>
       <Topbar userName={userName} userCode={userCode} userSchool={userSchool}
-              fields={fields} currentPhase={0} scores={scores} onSave={() => save(true)} saving={saving} />
+              fields={fields} currentPhase={0} scores={scores}
+              onSave={() => save(true)} saving={saving} onNavigate={onNavigate} />
 
       <div className="phase-content">
         <div className="ph-banner p1">
@@ -49,7 +49,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           </div>
         </div>
 
-        <Section icon="📋" iconBg="#e8eef8" title="פרטי התוכנית" desc="מלאו לפני תחילת ההערכה" defaultOpen>
+        <Section title="פרטי התוכנית" desc="מלאו לפני תחילת ההערכה" defaultOpen>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
             <div className="fg" style={{ margin: 0 }}>
               <label>שם התוכנית *</label>
@@ -85,9 +85,8 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
               </select>
               {fields['f-domain'] === 'אחר' && (
                 <input value={fields['f-domain-other']} onChange={e => setField('f-domain-other', e.target.value)}
-                  placeholder="פרט/י את יעד התוכנית..."
-                  style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)', borderRadius: 10,
-                           padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
+                  placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
+                  borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
               )}
             </div>
             <div className="fg" style={{ margin: 0 }}>
@@ -98,13 +97,12 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
               </select>
               {fields['f-area'] === 'אחר' && (
                 <input value={fields['f-area-other']} onChange={e => setField('f-area-other', e.target.value)}
-                  placeholder="פרט/י את התחום..."
-                  style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)', borderRadius: 10,
-                           padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
+                  placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
+                  borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
               )}
             </div>
             <div className="fg" style={{ margin: 0 }}>
-              <label>מספר אנשי צוות המקדמים את יישום התוכנית</label>
+              <label>מספר אנשי צוות</label>
               <input type="number" value={fields['f-contact']} onChange={e => setField('f-contact', e.target.value)} placeholder="מספר" />
             </div>
             <div className="fg" style={{ margin: 0 }}>
@@ -120,7 +118,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <div className="pb-num">{scores[0]}%</div>
         </div>
 
-        <Section icon="🏫" iconBg="#e8eef8" title="מיפוי צרכים בית-ספרי" desc="זיהוי הצורך המרכזי" defaultOpen>
+        <Section title="מיפוי צרכים בית-ספרי" desc="זיהוי הצורך המרכזי" defaultOpen>
           {checkboxes1.map(c => (
             <div key={c.id} className="ci">
               <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
@@ -131,7 +129,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n1} onChange={e => setNote('n1', e.target.value)} placeholder="תארו את הצורך..." />
         </Section>
 
-        <Section icon="✅" iconBg="#eafaf1" title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
+        <Section title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
           {checkboxes2.map(c => (
             <div key={c.id} className="ci">
               <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
@@ -142,7 +140,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n2} onChange={e => setNote('n2', e.target.value)} placeholder="כיצד התוכנית עונה על הצורך?" />
         </Section>
 
-        <Section icon="⚙️" iconBg="#fef3e2" title="משאבים ותשתית" desc="כוח אדם, שעות, ציוד, תקציב">
+        <Section title="משאבים ותשתית" desc="כוח אדם, שעות, ציוד, תקציב">
           {checkboxes3.map(c => (
             <div key={c.id} className="ci">
               <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
@@ -153,7 +151,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n3} onChange={e => setNote('n3', e.target.value)} placeholder="כוח אדם, שעות שבועיות, תקציב..." />
         </Section>
 
-        <Section icon="📐" iconBg="#f3e8fd" title="מדדי הערכה וצמתי מעקב" desc="תכנון מראש של מה, מתי ואיך מודדים">
+        <Section title="מדדי הערכה וצמתי מעקב" desc="תכנון מראש של מה, מתי ואיך מודדים">
           {checkboxes4.map(c => (
             <div key={c.id} className="ci">
               <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
