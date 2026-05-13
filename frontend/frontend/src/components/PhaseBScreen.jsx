@@ -13,7 +13,6 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
 
       <div className="phase-content">
         <div className="ph-banner p2">
-          <span style={{ fontSize: '1.5rem' }}>📊</span>
           <div>
             <h3>שלב ב׳ — במהלך התוכנית <small style={{ fontWeight: 400, opacity: 0.7 }}>(ספטמבר–אפריל)</small></h3>
             <p>מעקב שוטף ומדידת ביניים. ניתן ורצוי למלא מספר פעמים לאורך השנה.</p>
@@ -26,7 +25,6 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <div className="pb-num">{scores[1]}%</div>
         </div>
 
-        {/* סדירות וכמות */}
         <Section icon="📅" iconBg="#e8f5f2" title="סדירות וכמות" desc="האם התוכנית מתקיימת כמתוכנן?" defaultOpen>
           <ScaleLegend />
           {[
@@ -42,7 +40,6 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n5} onChange={e => setNote('n5', e.target.value)} placeholder="מספר מפגשים שהתקיימו, סיבות לביטולים..." />
         </Section>
 
-        {/* איכות הביצוע */}
         <Section icon="🌟" iconBg="#fef3e2" title="איכות הביצוע" desc="האם התוכנית מופעלת כראוי?">
           <ScaleLegend />
           {[
@@ -61,7 +58,6 @@ export function PhaseBScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n6} onChange={e => setNote('n6', e.target.value)} placeholder="מה עובד טוב? מה בעייתי?" />
         </Section>
 
-        {/* סימני התקדמות */}
         <Section icon="📈" iconBg="#e8eef8" title="סימני התקדמות — מדידת ביניים" desc="האם ישנם סימנים ראשוניים לשינוי?">
           <ScaleLegend />
           {[
