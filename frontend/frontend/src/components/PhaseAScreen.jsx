@@ -43,14 +43,12 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
 
       <div className="phase-content">
         <div className="ph-banner p1">
-          <span style={{ fontSize: '1.5rem' }}>🔍</span>
           <div>
             <h3>שלב א׳ — טרום תוכנית <small style={{ fontWeight: 400, opacity: 0.7 }}>(מאי–יוני)</small></h3>
             <p>מיפוי צרכים, בחירת תוכנית, תכנון מערך ההערכה.</p>
           </div>
         </div>
 
-        {/* פרטי התוכנית */}
         <Section icon="📋" iconBg="#e8eef8" title="פרטי התוכנית" desc="מלאו לפני תחילת ההערכה" defaultOpen>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
             <div className="fg" style={{ margin: 0 }}>
@@ -107,7 +105,7 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
             </div>
             <div className="fg" style={{ margin: 0 }}>
               <label>מספר אנשי צוות המקדמים את יישום התוכנית</label>
-              <input type="number" value={fields['f-contact']} onChange={e => setField('f-contact', e.target.value)} placeholder="מספר אנשי צוות" />
+              <input type="number" value={fields['f-contact']} onChange={e => setField('f-contact', e.target.value)} placeholder="מספר" />
             </div>
             <div className="fg" style={{ margin: 0 }}>
               <label>מספר תלמידים</label>
@@ -116,14 +114,12 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           </div>
         </Section>
 
-        {/* סרגל התקדמות */}
         <div className="progress-wrap">
           <div className="progress-lbl">התקדמות שלב א׳</div>
           <div className="pb-outer"><div className="pb-inner" style={{ width: `${scores[0]}%` }} /></div>
           <div className="pb-num">{scores[0]}%</div>
         </div>
 
-        {/* מיפוי צרכים */}
         <Section icon="🏫" iconBg="#e8eef8" title="מיפוי צרכים בית-ספרי" desc="זיהוי הצורך המרכזי" defaultOpen>
           {checkboxes1.map(c => (
             <div key={c.id} className="ci">
@@ -135,7 +131,6 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n1} onChange={e => setNote('n1', e.target.value)} placeholder="תארו את הצורך..." />
         </Section>
 
-        {/* בחירת התוכנית והלימה */}
         <Section icon="✅" iconBg="#eafaf1" title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
           {checkboxes2.map(c => (
             <div key={c.id} className="ci">
@@ -147,7 +142,6 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n2} onChange={e => setNote('n2', e.target.value)} placeholder="כיצד התוכנית עונה על הצורך?" />
         </Section>
 
-        {/* משאבים ותשתית */}
         <Section icon="⚙️" iconBg="#fef3e2" title="משאבים ותשתית" desc="כוח אדם, שעות, ציוד, תקציב">
           {checkboxes3.map(c => (
             <div key={c.id} className="ci">
@@ -159,7 +153,6 @@ export function PhaseAScreen({ eval: ev, onNext, active }) {
           <textarea className="na" value={notes.n3} onChange={e => setNote('n3', e.target.value)} placeholder="כוח אדם, שעות שבועיות, תקציב..." />
         </Section>
 
-        {/* מדדי הערכה */}
         <Section icon="📐" iconBg="#f3e8fd" title="מדדי הערכה וצמתי מעקב" desc="תכנון מראש של מה, מתי ואיך מודדים">
           {checkboxes4.map(c => (
             <div key={c.id} className="ci">
