@@ -34,6 +34,14 @@ const store = {
   async listAll() {
     const col = await getCollection(COLLECTION);
     return col.find({}).sort({ savedAt: -1 }).toArray();
+  },
+
+  // חיפוש לפי סמל מוסד — מחזיר כל ההערכות של אותו מוסד
+  async getBySchool(symbol) {
+    const col = await getCollection(COLLECTION);
+    return col.find({
+      userName: { $regex: new RegExp(`^${symbol.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+    }).sort({ savedAt: -1 }).toArray();
   }
 };
 
