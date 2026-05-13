@@ -10,14 +10,14 @@ import './styles/global.css';
 
 export default function App() {
   const [screen, setScreen] = useState('landing');
-  const [toast, setToast] = useState({ msg: '', show: false, color: 'var(--navy)' });
-  const evalState = useEvaluation();
+  const [toast, setToast]   = useState({ msg: '', show: false, color: 'var(--navy)' });
+  const evalState           = useEvaluation();
 
   const originalSave = evalState.save;
   const saveWithToast = async (show = true) => {
     try {
       await originalSave(show);
-      if (show) showToast('✅ ההערכה נשמרה!', 'var(--teal)');
+      if (show) showToast('ההערכה נשמרה!', 'var(--teal)');
     } catch {
       if (show) showToast('שגיאה בשמירה', '#c0392b');
     }
@@ -30,6 +30,12 @@ export default function App() {
 
   function goTo(nextScreen) {
     setScreen(nextScreen);
+  }
+
+  function handleNavigate(targetScreen) {
+    // שמירה אוטומטית לפני ניווט
+    evalState.save(false).catch(() => {});
+    goTo(targetScreen);
   }
 
   function handleNewUser(code, name, school, principal) {
@@ -47,7 +53,7 @@ export default function App() {
     evalState.setUserPrincipal(data.userPrincipal || '');
     evalState.loadData(data);
     goTo('phase0');
-    showToast('✅ ברוך/ה השב/ה! הנתונים נטענו', 'var(--teal)');
+    showToast('הנתונים נטענו', 'var(--teal)');
   }
 
   const ev = { ...evalState, save: saveWithToast };
@@ -61,14 +67,18 @@ export default function App() {
         active={screen === 'landing'}
       />
       <PhaseAScreen eval={ev} active={screen === 'phase0'}
+        onNavigate={handleNavigate}
         onNext={() => { ev.save(false); goTo('phase1'); }} />
       <PhaseBScreen eval={ev} active={screen === 'phase1'}
+        onNavigate={handleNavigate}
         onPrev={() => { ev.save(false); goTo('phase0'); }}
         onNext={() => { ev.save(false); goTo('phase2'); }} />
       <PhaseCScreen eval={ev} active={screen === 'phase2'}
+        onNavigate={handleNavigate}
         onPrev={() => { ev.save(false); goTo('phase1'); }}
         onNext={() => { ev.save(false); goTo('phase3'); }} />
       <SummaryScreen eval={ev} active={screen === 'phase3'}
+        onNavigate={handleNavigate}
         onPrev={() => { ev.save(false); goTo('phase2'); }} />
       <AdminScreen active={screen === 'admin'} onBack={() => goTo('landing')} />
 
