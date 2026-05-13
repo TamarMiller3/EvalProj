@@ -3,13 +3,14 @@ import { Section } from './Section';
 import { ScaleWidget, ScaleLegend } from './ScaleWidget';
 import { BottomNav } from './BottomNav';
 
-export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
+export function PhaseCScreen({ eval: ev, onPrev, onNext, onNavigate, active }) {
   const { userName, userCode, userSchool, fields, scales, setScale, notes, setNote, scores, save, saving } = ev;
 
   return (
     <div className={`screen${active ? ' active' : ''}`}>
       <Topbar userName={userName} userCode={userCode} userSchool={userSchool}
-              fields={fields} currentPhase={2} scores={scores} onSave={() => save(true)} saving={saving} />
+              fields={fields} currentPhase={2} scores={scores}
+              onSave={() => save(true)} saving={saving} onNavigate={onNavigate} />
 
       <div className="phase-content">
         <div className="ph-banner p3">
@@ -27,7 +28,7 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
 
         <ScaleLegend labels={['לא הושג', 'הושג חלקית', 'הושג ברובו', 'הושג במלואו']} />
 
-        <Section icon="📊" iconBg="#fef3e2" title="השגת יעדים ותוצאות" desc="השוואה בין נקודת הפתיחה לנקודת הסוף" defaultOpen>
+        <Section title="השגת יעדים ותוצאות" desc="השוואה בין נקודת הפתיחה לנקודת הסוף" defaultOpen>
           {[
             { key: 'out1', label: 'הושג שיפור בתחום הנבחר במסגרת התוכנית' },
             { key: 'out2', label: 'שביעות הרצון של קהל היעד המשתתף בתוכנית גבוהה' },
@@ -42,7 +43,7 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
           <textarea className="na" value={notes.n8} onChange={e => setNote('n8', e.target.value)} placeholder="ציון ממוצע X → Y | נוכחות X% → Y%..." />
         </Section>
 
-        <Section icon="💡" iconBg="#e8eef8" title="לקחים, תובנות והמלצות" desc="מה למדנו? מה היה שונה?">
+        <Section title="לקחים, תובנות והמלצות" desc="מה למדנו? מה היה שונה?">
           <span className="nl">מה לא עבד:</span>
           <textarea className="na" value={notes.n9} onChange={e => setNote('n9', e.target.value)} placeholder="מה האתגר?" />
           <span className="nl" style={{ marginTop: 10 }}>מה עבד טוב:</span>
@@ -56,3 +57,4 @@ export function PhaseCScreen({ eval: ev, onPrev, onNext, active }) {
     </div>
   );
 }
+
