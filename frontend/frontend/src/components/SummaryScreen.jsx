@@ -13,76 +13,234 @@ export function SummaryScreen({ eval: ev, onPrev, onNavigate, active }) {
   function handlePrint() {
     const d = data;
     const sc = d.scales || {};
-    const chk = id => d.checks?.[id] ? '☑' : '☐';
-    const scLabel = key => { const v = sc[key]; if (!v) return '—'; return ['','1','2','3','4'][v] || '—'; };
+    const ch = d.checks || {};
+
+    const chkBox = id => ch[id]
+      ? `<span style="color:#0d7c66;font-weight:bold;font-size:14px">✓</span>`
+      : `<span style="color:#ccc;font-size:14px">☐</span>`;
+
+    const scaleBtn = (key) => {
+      const v = sc[key];
+      if (!v) return `<span style="color:#ccc;font-size:11px">לא נבחר</span>`;
+      const colors = ['','#e74c3c','#e67e22','#f1c40f','#27ae60'];
+      const textColors = ['','white','white','#5a4200','white'];
+      return `<span style="background:${colors[v]};color:${textColors[v]};padding:3px 12px;border-radius:5px;font-weight:700;font-size:12px">${v}</span>`;
+    };
+
+    const noteBox = (text, placeholder) =>
+      `<div style="background:#f8fafc;border:1px solid #e0e6ed;border-radius:6px;padding:8px 12px;font-size:12px;${text ? 'white-space:pre-wrap' : 'color:#bbb'};margin-top:4px;min-height:32px">${text || placeholder}</div>`;
+
+    const ciRow = (id, label) =>
+      `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed #e0e6ed;font-size:12px">
+        <span style="flex-shrink:0;margin-top:1px">${chkBox(id)}</span><span>${label}</span></div>`;
+
+    const scaleRow = (key, label, sub) =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed #e0e6ed">
+        <div style="flex:1;font-size:12px;line-height:1.5">${label}${sub ? `<div style="font-size:10px;color:#6b7280;margin-top:2px">${sub}</div>` : ''}</div>
+        <div style="flex-shrink:0">${scaleBtn(key)}</div>
+      </div>`;
+
+    const card = (title, desc, content) =>
+      `<div style="background:white;border-radius:12px;box-shadow:0 2px 10px rgba(26,39,68,0.08);margin-bottom:14px;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;background:white">
+          <div style="font-weight:700;font-size:13px;color:#1a2744">${title}</div>
+          ${desc ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${desc}</div>` : ''}
+        </div>
+        <div style="padding:10px 16px 14px">${content}</div>
+      </div>`;
+
+    const banner = (bg, border, title, sub) =>
+      `<div style="border-radius:10px;padding:14px 18px;margin-bottom:16px;background:${bg};border-right:4px solid ${border}">
+        <div style="font-size:14px;font-weight:700;color:#1a2744">${title}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:3px">${sub}</div>
+      </div>`;
+
+    const progressBar = (label, pct) =>
+      `<div style="background:white;border-radius:8px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(26,39,68,0.07)">
+        <div style="font-size:11px;font-weight:700;color:#1a2744;white-space:nowrap">${label}</div>
+        <div style="flex:1;height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#0d7c66,#4fc3a1);border-radius:4px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:#0d7c66;white-space:nowrap">${pct}%</div>
+      </div>`;
+
+    const legend = (labels) => {
+      const l = labels || ['לא מתקיים','חלקי','מספק','מצוין'];
+      const colors = ['#e74c3c','#e67e22','#f1c40f','#27ae60'];
+      return `<div style="display:flex;gap:14px;background:#f3f4f6;border-radius:7px;padding:8px 12px;margin-bottom:12px;flex-wrap:wrap">
+        ${l.map((t,i) => `<div style="display:flex;align-items:center;gap:5px;font-size:11px">
+          <div style="width:10px;height:10px;border-radius:3px;background:${colors[i]}"></div>${i+1} = ${t}</div>`).join('')}
+      </div>`;
+    };
+
     const decMap = { continue: 'לשמר את הקיים', modify: 'להמשיך עם שינויים', replace: 'להחליף בתוכנית אחרת', stop: 'לא להמשיך' };
 
-    const html = `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">
-<title>דוח — ${d.fields?.['f-prog'] || ''}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;direction:rtl;font-size:13px;padding:30px;color:#1e293b}
-h1{font-size:18px;color:#1a2744;border-bottom:3px solid #0d7c66;padding-bottom:8px;margin-bottom:16px}
-h2{font-size:13px;color:#0d7c66;background:#e8f5f2;padding:6px 10px;border-right:4px solid #0d7c66;margin:16px 0 8px;border-radius:4px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.field{background:#f8fafc;border:1px solid #e0e6ed;border-radius:5px;padding:7px 10px}
-.field label{display:block;font-size:10px;color:#6b7280;margin-bottom:2px}.field span{font-weight:bold}
-.score-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.sc{background:#f8fafc;border:2px solid #e0e6ed;border-radius:7px;padding:10px;text-align:center}
-.sc .v{font-size:22px;font-weight:900}.sc .l{font-size:11px;color:#6b7280;margin-top:2px}
-.ci{padding:3px 0;border-bottom:1px dashed #e0e6ed;font-size:12px}
-.sr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #e0e6ed;font-size:12px}
-.nb{background:#f8fafc;border:1px solid #e0e6ed;border-radius:5px;padding:7px 10px;margin:5px 0;font-size:12px;white-space:pre-wrap;min-height:30px}
-.dec{background:#eafaf1;border:2px solid #0d7c66;border-radius:7px;padding:10px 14px;margin:12px 0;font-size:13px;font-weight:bold;color:#0d7c66}
-.foot{margin-top:24px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px}
-@media print{body{padding:15px}}</style></head><body>
-<h1>דוח הערכת תוכנית חינוכית</h1>
-<div style="font-size:11px;color:#6b7280;margin-bottom:14px">מחוז חיפה | ${new Date().toLocaleDateString('he-IL')}</div>
-<h2>פרטי התוכנית</h2>
-<div class="grid2">
-<div class="field"><label>שם התוכנית</label><span>${d.fields?.['f-prog']||'—'}</span></div>
-<div class="field"><label>שנת לימודים</label><span>${d.fields?.['f-year']||'—'}</span></div>
-<div class="field"><label>סמל מוסד</label><span>${d.userName||'—'}</span></div>
-<div class="field"><label>שם בית הספר</label><span>${d.userSchool||'—'}</span></div>
-<div class="field"><label>שם מנהל/ת</label><span>${d.userPrincipal||'—'}</span></div>
-<div class="field"><label>וותק</label><span>${d.fields?.['f-seniority']||'—'}</span></div>
-<div class="field"><label>קהל יעד</label><span>${d.fields?.['f-target']||'—'}</span></div>
-<div class="field"><label>יעד</label><span>${d.fields?.['f-domain']||'—'}</span></div>
-<div class="field"><label>תחום</label><span>${d.fields?.['f-area']||'—'}</span></div>
-<div class="field"><label>תלמידים</label><span>${d.fields?.['f-num']||'—'}</span></div>
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8">
+<title>דוח הערכת תוכנית — ${d.fields?.['f-prog'] || ''}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;direction:rtl;background:#edf0f7;color:#1e293b}
+  .page{max-width:820px;margin:0 auto;padding:20px}
+  .pb{page-break-before:always}
+  @media print{body{background:white}.page{padding:8px}}
+</style>
+</head>
+<body><div class="page">
+
+<!-- טופבר -->
+<div style="background:#1a2744;color:white;border-radius:12px;padding:14px 20px;margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:15px;font-weight:800">הערכת תוכניות חינוכיות</div>
+    <div style="font-size:11px;opacity:0.65">${d.userName || ''} | ${d.userSchool || ''}</div>
+  </div>
+  <div style="background:rgba(255,255,255,0.08);padding:6px 0;font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px">
+    ${[d.fields?.['f-prog'],d.userSchool,d.fields?.['f-year'],d.fields?.['f-domain'],d.fields?.['f-target']].filter(Boolean).join(' | ')}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:0;padding:4px 0">
+    ${['א׳ — טרום','ב׳ — מהלך','ג׳ — סוף','סיכום'].map((label,i) => {
+      const pct = scores[i]||0; const done = pct>0;
+      const bg = done ? '#4fc3a1' : 'white';
+      const fc = done ? 'white' : '#1a2744';
+      const content = done ? '✓' : (pct>0?`${pct}%`:String(i+1));
+      return `<div style="display:flex;align-items:center">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div style="width:36px;height:36px;border-radius:50%;background:${bg};color:${fc};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;border:2px solid rgba(255,255,255,0.25)">${content}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;white-space:nowrap">${label}</div>
+        </div>
+        ${i<3?`<div style="width:28px;height:2px;background:${done?'#4fc3a1':'rgba(255,255,255,0.15)'};margin-bottom:16px"></div>`:''}
+      </div>`;
+    }).join('')}
+  </div>
 </div>
-<h2>ציונים</h2>
-<div class="score-row">
-<div class="sc"><div class="v" style="color:#1a2744">${scores[0]}%</div><div class="l">שלב א׳ — הכנה</div></div>
-<div class="sc"><div class="v" style="color:#0d7c66">${scores[1]}%</div><div class="l">שלב ב׳ — מהלך</div></div>
-<div class="sc"><div class="v" style="color:#e67e22">${scores[2]}%</div><div class="l">שלב ג׳ — תוצאות</div></div>
+
+<!-- שלב א׳ -->
+${banner('#e8eef8','#1a2744','שלב א׳ — טרום תוכנית','מיפוי צרכים, בחירת תוכנית, תכנון מערך ההערכה | (מאי–יוני)')}
+
+${card('פרטי התוכנית','',`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  ${[['שם התוכנית',d.fields?.['f-prog']],['שנת לימודים',d.fields?.['f-year']],['סמל מוסד',d.userName],['שם בית הספר',d.userSchool],['שם מנהל/ת',d.userPrincipal],['וותק',d.fields?.['f-seniority']],['קהל יעד',d.fields?.['f-target']],['יעד',d.fields?.['f-domain']],['תחום',d.fields?.['f-area']],['תלמידים',d.fields?.['f-num']],['אנשי צוות',d.fields?.['f-contact']]].map(([l,v])=>`
+  <div style="background:#f8fafc;border:1px solid #e0e6ed;border-radius:6px;padding:7px 10px">
+    <div style="font-size:10px;color:#6b7280;margin-bottom:2px">${l}</div>
+    <div style="font-weight:700;font-size:12px">${v||'—'}</div>
+  </div>`).join('')}
+</div>`)}
+
+${progressBar('התקדמות שלב א׳', scores[0])}
+
+${card('מיפוי צרכים בית-ספרי','זיהוי הצורך המרכזי',
+  ['c1','c2','c3','c4','c5'].map((c,i)=>ciRow(c,['הושלם תהליך מיפוי תמונת מצב בית ספרית','אותרו צרכים בית ספריים לקידום','הצורך התבסס על נתונים פנימיים וחיצוניים','צוות הניהול היה שותף לזיהוי הצורך ואישר את הבחירה','הושלם סטטוס של אוכלוסיית היעד לקראת הפעלת התוכנית'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הצורך המרכזי שזוהה:</div>${noteBox(d.notes?.n1,'תארו את הצורך...')}`
+)}
+
+${card('בחירת התוכנית והלימה לצורך','',
+  ['c19','c6','c7','c8'].map((c,i)=>ciRow(c,['הלימה בין מטרות התוכנית לצורך הבית-ספרי','נבדקו תוכניות חלופיות לפני הבחירה הסופית','קיבלנו המלצות מבתי ספר אחרים שהפעילו את התוכנית','אין חפיפה עם תוכנית קיימת אחרת בבית הספר'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הסבר על ההלימה:</div>${noteBox(d.notes?.n2,'כיצד התוכנית עונה על הצורך?')}`
+)}
+
+${card('משאבים ותשתית','',
+  ['c9','c10','c11','c12','c13'].map((c,i)=>ciRow(c,['שעות להפעלת התוכנית מעוגנות במערכת הבית ספרית','הותאמו תשתיות הנדרשות ליישום התוכנית','הוגדר אחראי מטעם בית הספר והוגדרו תחומי אחריותו','הוגדר קהל היעד — מספר תלמידים ומאפיינים','הוגדר משאב תקציבי ואושר על ידי מפקחת בית הספר'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">פרטי משאבים:</div>${noteBox(d.notes?.n3,'כוח אדם, שעות שבועיות, תקציב...')}`
+)}
+
+${card('מדדי הערכה וצמתי מעקב','',
+  ['c14','c15','c16','c17','c18'].map((c,i)=>ciRow(c,['נקבעו מדדי סדירות: מספר מפגשים, אחוז נוכחות','נקבעו מדדי תפוקה: שיפור הישגים / רגשי / חברתי','נבחרו כלי הערכה ספציפיים (שאלון, מבחן, ראיון, תצפית)','נקבעו צמתי הערכה בלוח השנה','נקבע יעד ספציפי ומדיד להגדרת ההצלחה'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">פירוט מדדים ויעדים:</div>${noteBox(d.notes?.n4,'למשל: 80% נוכחות...')}`
+)}
+
+<!-- שלב ב׳ -->
+<div class="pb"></div>
+${banner('#e8f5f2','#0d7c66','שלב ב׳ — במהלך התוכנית','מעקב שוטף ומדידת ביניים | (ספטמבר–אפריל)')}
+${progressBar('התקדמות שלב ב׳', scores[1])}
+
+${card('סדירות וכמות','האם התוכנית מתקיימת כמתוכנן?',
+  legend()+
+  scaleRow('reg1','המפגשים התקיימו באופן סדיר','מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי')+
+  scaleRow('reg2','כל קהל היעד השתתף בכל המפגשים','')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הערות סדירות:</div>${noteBox(d.notes?.n5,'מספר מפגשים שהתקיימו, סיבות לביטולים...')}`
+)}
+
+${card('איכות הביצוע','האם התוכנית מופעלת כראוי?',
+  legend()+
+  scaleRow('qu1','תכנון המפגשים','')+
+  scaleRow('qu2','התאמת המנחה לרציונל התוכנית','מיומנויות, גישה פדגוגית, קשר עם תלמידים')+
+  scaleRow('qu3','מטרות התוכנית מיושמות','')+
+  scaleRow('qu4','מידת שביעות רצון התלמידים גבוהה','')+
+  scaleRow('qu5','המורים המעורבים בתוכנית מביעים שביעות רצון גבוהה','')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הערות איכות:</div>${noteBox(d.notes?.n6,'מה עובד טוב? מה בעייתי?')}`
+)}
+
+${card('סימני התקדמות — מדידת ביניים','האם ישנם סימנים ראשוניים לשינוי?',
+  legend()+
+  scaleRow('pr1','קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר במסגרת התוכנית','')+
+  scaleRow('pr2','תשתיות ומשאבים מספיקים להמשך הפעלת התוכנית','')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">עדויות לשינוי + פעולות לשיפור:</div>${noteBox(d.notes?.n7,'מה השתנה עד כה?')}`
+)}
+
+<!-- שלב ג׳ -->
+<div class="pb"></div>
+${banner('#fef3e2','#e67e22','שלב ג׳ — הערכת סוף תוכנית','הערכה מסכמת — השוואה לנתוני הבסיס, לקחים והמלצות | (מאי–יוני)')}
+${progressBar('התקדמות שלב ג׳', scores[2])}
+
+${card('השגת יעדים ותוצאות','השוואה בין נקודת הפתיחה לנקודת הסוף',
+  legend(['לא הושג','הושג חלקית','הושג ברובו','הושג במלואו'])+
+  scaleRow('out1','הושג שיפור בתחום הנבחר במסגרת התוכנית','')+
+  scaleRow('out2','שביעות הרצון של קהל היעד המשתתף בתוכנית גבוהה','')+
+  scaleRow('out4','התוצאות שהושגו מצביעות על כדאיות ההשקעה בתוכנית','')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">נתוני השוואה (התחלה → סוף):</div>${noteBox(d.notes?.n8,'ציון ממוצע X → Y...')}`
+)}
+
+${card('לקחים, תובנות והמלצות','מה למדנו? מה היה שונה?',
+  `<div style="font-size:10px;color:#6b7280;margin-bottom:3px">מה לא עבד:</div>${noteBox(d.notes?.n9,'מה האתגר?')}
+   <div style="font-size:10px;color:#6b7280;margin-top:10px;margin-bottom:3px">מה עבד טוב:</div>${noteBox(d.notes?.n10,'מה הצליח?')}
+   <div style="font-size:10px;color:#6b7280;margin-top:10px;margin-bottom:3px">המלצה לשנה הבאה:</div>${noteBox(d.notes?.n11,'להמשיך? לשנות?')}`
+)}
+
+<!-- סיכום -->
+<div class="pb"></div>
+${banner('#eafaf1','#27ae60','סיכום ולקחים','תמונה כוללת של הערכת התוכנית — ציונים, תובנות ומסקנות')}
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+  ${[['שלב א׳ — הכנה',scores[0],'#1a2744'],['שלב ב׳ — מהלך',scores[1],'#0d7c66'],['שלב ג׳ — תוצאות',scores[2],'#e67e22']].map(([l,s,c])=>`
+  <div style="background:white;border-radius:12px;padding:18px;text-align:center;box-shadow:0 2px 10px rgba(26,39,68,0.08)">
+    <div style="font-size:2rem;font-weight:900;color:${c};line-height:1">${s}%</div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px">${l}</div>
+  </div>`).join('')}
 </div>
-<h2>שלב א׳</h2>
-${['c1','c2','c3','c4','c5'].map((c,i)=>{const l=['מיפוי תמונת מצב','אותרו צרכים','נתונים פנימיים וחיצוניים','ניהול שותף','סטטוס אוכלוסיית יעד'];return`<div class="ci">${chk(c)} ${l[i]}</div>`;}).join('')}
-${['c19','c6','c7','c8'].map((c,i)=>{const l=['הלימה בין מטרות לצורך','תוכניות חלופיות','המלצות מבתי ספר אחרים','אין חפיפה'];return`<div class="ci">${chk(c)} ${l[i]}</div>`;}).join('')}
-${['c9','c10','c11','c12','c13'].map((c,i)=>{const l=['שעות מעוגנות','תשתיות הותאמו','אחראי הוגדר','קהל יעד הוגדר','תקציב אושר'];return`<div class="ci">${chk(c)} ${l[i]}</div>`;}).join('')}
-${['c14','c15','c16','c17','c18'].map((c,i)=>{const l=['מדדי סדירות','מדדי תפוקה','כלי הערכה','צמתי הערכה','יעד מדיד'];return`<div class="ci">${chk(c)} ${l[i]}</div>`;}).join('')}
-<h2>שלב ב׳</h2>
-${[['reg1','מפגשים סדירים'],['reg2','קהל יעד השתתף'],['qu1','תכנון מפגשים'],['qu2','התאמת מנחה'],['qu3','מטרות מיושמות'],['qu4','שביעות רצון תלמידים'],['qu5','שביעות רצון מורים'],['pr1','עדויות לשינוי'],['pr2','תשתיות ומשאבים']].map(([k,l])=>`<div class="sr"><span>${l}</span><span>${scLabel(k)}</span></div>`).join('')}
-${d.notes?.n7?`<div class="nb">${d.notes.n7}</div>`:''}
-<h2>שלב ג׳</h2>
-${[['out1','שיפור בתחום'],['out2','שביעות רצון'],['out4','כדאיות ההשקעה']].map(([k,l])=>`<div class="sr"><span>${l}</span><span>${scLabel(k)}</span></div>`).join('')}
-${d.notes?.n9?`<div class="nb"><b>מה לא עבד:</b> ${d.notes.n9}</div>`:''}
-${d.notes?.n10?`<div class="nb"><b>מה עבד:</b> ${d.notes.n10}</div>`:''}
-${d.notes?.n11?`<div class="nb"><b>המלצה:</b> ${d.notes.n11}</div>`:''}
-<h2>החלטה</h2>
-${d.decision?`<div class="dec">${decMap[d.decision]||d.decision}</div>`:''}
-${d.notes?.n12?`<div class="nb"><b>הנמקה:</b> ${d.notes.n12}</div>`:''}
-${d.notes?.n13?`<div class="nb"><b>הערות:</b> ${d.notes.n13}</div>`:''}
-<div class="foot">כלי הערכת תוכניות חינוכיות | מחוז חיפה | ${new Date().toLocaleString('he-IL')}</div>
-</body></html>`;
+
+<div style="background:#e8f5f2;border-radius:12px;padding:16px;border-right:4px solid #0d7c66;margin-bottom:14px">
+  <div style="font-size:13px;font-weight:700;color:#0d7c66;margin-bottom:8px">תובנות אוטומטיות</div>
+  <ul style="padding-right:18px;margin-bottom:10px">${insights.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join('')}</ul>
+  <div style="font-size:13px;font-weight:700;color:#b7800a;margin-top:10px;margin-bottom:8px">דרכי פעולה מומלצות</div>
+  <ul style="padding-right:18px;margin-bottom:10px">${actions.length?actions.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join(''):`<li style="list-style:none;font-size:12px;color:#aaa;font-style:italic">אין פריטים להצגה</li>`}</ul>
+  <div style="font-size:13px;font-weight:700;color:#1a2744;margin-top:10px;margin-bottom:8px">דרכי שיפור הנתונים</div>
+  <ul style="padding-right:18px">${dataRecs.length?dataRecs.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join(''):`<li style="list-style:none;font-size:12px;color:#aaa;font-style:italic">אין פריטים להצגה</li>`}</ul>
+</div>
+
+${card('החלטה על המשך התוכנית','',
+  (d.decision?`<div style="display:inline-block;background:#e8f5f2;border:2px solid #0d7c66;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;color:#0d7c66;margin-bottom:10px">${decMap[d.decision]||d.decision}</div>`:`<div style="font-size:12px;color:#bbb;margin-bottom:10px">טרם נבחרה החלטה</div>`)+
+  `<div style="font-size:10px;color:#6b7280;margin-bottom:3px">הנמקה:</div>${noteBox(d.notes?.n12,'הנמקה מפורטת...')}`
+)}
+
+${card('הערות סיכום כלליות','',noteBox(d.notes?.n13,'סיכום כולל של הערכת התוכנית...'))}
+
+<div style="text-align:center;font-size:10px;color:#aaa;margin-top:20px;padding-top:12px;border-top:1px solid #e0e6ed">
+  כלי הערכת תוכניות חינוכיות | מחוז חיפה | ${new Date().toLocaleString('he-IL')}
+</div>
+
+</div></body></html>`;
 
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:850px;height:600px;border:none;';
     document.body.appendChild(iframe);
     iframe.contentDocument.open();
     iframe.contentDocument.write(html);
     iframe.contentDocument.close();
     iframe.contentWindow.focus();
-    setTimeout(() => { iframe.contentWindow.print(); setTimeout(() => document.body.removeChild(iframe), 2000); }, 600);
+    setTimeout(() => {
+      iframe.contentWindow.print();
+      setTimeout(() => document.body.removeChild(iframe), 3000);
+    }, 800);
   }
 
   return (
