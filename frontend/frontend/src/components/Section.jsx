@@ -5,7 +5,9 @@ export function Section({ icon, iconBg, title, desc, children, defaultOpen = fal
   return (
     <div className="section">
       <div className="section-header" onClick={() => setOpen(o => !o)}>
-        <div className="section-icon" style={{ background: iconBg }}>{icon}</div>
+        {icon && (
+          <div className="section-icon" style={{ background: iconBg }}>{icon}</div>
+        )}
         <div>
           <div className="section-title">{title}</div>
           {desc && <div className="section-desc">{desc}</div>}
@@ -16,3 +18,4 @@ export function Section({ icon, iconBg, title, desc, children, defaultOpen = fal
     </div>
   );
 }
+
