@@ -17,10 +17,10 @@ export function SummaryScreen({ eval: ev, onPrev, active }) {
     const scLabel = key => {
       const v = sc[key];
       if (!v) return '—';
-      const emojis = ['', '🔴 1', '🟠 2', '🟡 3', '🟢 4'];
-      return emojis[v] || '—';
+      const labels = ['', '1 - לא', '2 - חלקי', '3 - מספק', '4 - מצוין'];
+      return labels[v] || '—';
     };
-    const decMap = { continue: '✅ לשמר את הקיים', modify: '🔄 להמשיך עם שינויים', replace: '🔁 להחליף בתוכנית אחרת', stop: '❌ לא להמשיך' };
+    const decMap = { continue: 'לשמר את הקיים', modify: 'להמשיך עם שינויים', replace: 'להחליף בתוכנית אחרת', stop: 'לא להמשיך' };
 
     const html = `<!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -52,7 +52,6 @@ export function SummaryScreen({ eval: ev, onPrev, active }) {
 <body>
 <h1>דוח הערכת תוכנית חינוכית</h1>
 <div style="font-size:11px;color:#6b7280;margin-bottom:16px">מחוז חיפה | משרד החינוך | תאריך: ${new Date().toLocaleDateString('he-IL')}</div>
-
 <h2>פרטי התוכנית</h2>
 <div class="grid2">
   <div class="field"><label>שם התוכנית</label><span>${d.fields?.['f-prog'] || '—'}</span></div>
@@ -62,69 +61,46 @@ export function SummaryScreen({ eval: ev, onPrev, active }) {
   <div class="field"><label>שם מנהל/ת</label><span>${d.userPrincipal || '—'}</span></div>
   <div class="field"><label>וותק התוכנית</label><span>${d.fields?.['f-seniority'] || '—'}</span></div>
   <div class="field"><label>קהל יעד</label><span>${d.fields?.['f-target'] || '—'}</span></div>
-  <div class="field"><label>יעדי התוכנית</label><span>${d.fields?.['f-domain'] || '—'}${d.fields?.['f-domain-other'] ? ' — ' + d.fields['f-domain-other'] : ''}</span></div>
-  <div class="field"><label>תחום</label><span>${d.fields?.['f-area'] || '—'}${d.fields?.['f-area-other'] ? ' — ' + d.fields['f-area-other'] : ''}</span></div>
+  <div class="field"><label>יעדי התוכנית</label><span>${d.fields?.['f-domain'] || '—'}</span></div>
+  <div class="field"><label>תחום</label><span>${d.fields?.['f-area'] || '—'}</span></div>
   <div class="field"><label>מספר תלמידים</label><span>${d.fields?.['f-num'] || '—'}</span></div>
   <div class="field"><label>מספר אנשי צוות</label><span>${d.fields?.['f-contact'] || '—'}</span></div>
 </div>
-
 <h2>ציונים לפי שלבים</h2>
 <div class="score-row">
   <div class="score-card"><div class="val" style="color:#1a2744">${scores[0]}%</div><div class="lbl">שלב א׳ — הכנה</div></div>
   <div class="score-card"><div class="val" style="color:#0d7c66">${scores[1]}%</div><div class="lbl">שלב ב׳ — מהלך</div></div>
   <div class="score-card"><div class="val" style="color:#e67e22">${scores[2]}%</div><div class="lbl">שלב ג׳ — תוצאות</div></div>
 </div>
-
-<h2>שלב א׳ — טרום תוכנית</h2>
-<h3>מיפוי צרכים</h3>
-${['c1','c2','c3','c4','c5'].map((c,i) => {
-  const labels = ['הושלם תהליך מיפוי תמונת מצב בית ספרית','אותרו צרכים בית ספריים לקידום','הצורך התבסס על נתונים פנימיים וחיצוניים','צוות הניהול היה שותף לזיהוי הצורך ואישר את הבחירה','הושלם סטטוס של אוכלוסיית היעד לקראת הפעלת התוכנית'];
-  return `<div class="ci">${chk(c)} ${labels[i]}</div>`;
-}).join('')}
-<h3>בחירת התוכנית והלימה</h3>
-${['c19','c6','c7','c8'].map((c,i) => {
-  const labels = ['הלימה בין מטרות התוכנית לצורך הבית-ספרי','נבדקו תוכניות חלופיות לפני הבחירה הסופית','קיבלנו המלצות מבתי ספר אחרים שהפעילו את התוכנית','אין חפיפה עם תוכנית קיימת אחרת'];
-  return `<div class="ci">${chk(c)} ${labels[i]}</div>`;
-}).join('')}
-<h3>משאבים ותשתית</h3>
-${['c9','c10','c11','c12','c13'].map((c,i) => {
-  const labels = ['שעות להפעלת התוכנית מעוגנות במערכת הבית ספרית','הותאמו תשתיות הנדרשות ליישום התוכנית','הוגדר אחראי מטעם בית הספר והוגדרו תחומי אחריותו','הוגדר קהל היעד — מספר תלמידים ומאפיינים','הוגדר משאב תקציבי ואושר על ידי מפקחת בית הספר'];
-  return `<div class="ci">${chk(c)} ${labels[i]}</div>`;
-}).join('')}
-<h3>מדדי הערכה</h3>
-${['c14','c15','c16','c17','c18'].map((c,i) => {
-  const labels = ['נקבעו מדדי סדירות','נקבעו מדדי תפוקה','נבחרו כלי הערכה ספציפיים','נקבעו צמתי הערכה בלוח השנה','נקבע יעד ספציפי ומדיד להגדרת ההצלחה'];
-  return `<div class="ci">${chk(c)} ${labels[i]}</div>`;
-}).join('')}
-
-<h2>שלב ב׳ — במהלך התוכנית</h2>
+<h2>שלב א׳</h2>
+${['c1','c2','c3','c4','c5'].map((c,i) => { const l=['הושלם תהליך מיפוי תמונת מצב','אותרו צרכים בית ספריים','הצורך התבסס על נתונים','צוות הניהול שותף לזיהוי','הושלם סטטוס אוכלוסיית היעד']; return `<div class="ci">${chk(c)} ${l[i]}</div>`; }).join('')}
+${['c19','c6','c7','c8'].map((c,i) => { const l=['הלימה בין מטרות התוכנית לצורך','נבדקו תוכניות חלופיות','קיבלנו המלצות מבתי ספר אחרים','אין חפיפה עם תוכנית קיימת']; return `<div class="ci">${chk(c)} ${l[i]}</div>`; }).join('')}
+${['c9','c10','c11','c12','c13'].map((c,i) => { const l=['שעות להפעלת התוכנית מעוגנות','הותאמו תשתיות ליישום','הוגדר אחראי מטעם בית הספר','הוגדר קהל היעד','הוגדר משאב תקציבי']; return `<div class="ci">${chk(c)} ${l[i]}</div>`; }).join('')}
+${['c14','c15','c16','c17','c18'].map((c,i) => { const l=['נקבעו מדדי סדירות','נקבעו מדדי תפוקה','נבחרו כלי הערכה','נקבעו צמתי הערכה','נקבע יעד ספציפי ומדיד']; return `<div class="ci">${chk(c)} ${l[i]}</div>`; }).join('')}
+<h2>שלב ב׳</h2>
 <div class="scale-row"><span>המפגשים התקיימו באופן סדיר</span><span>${scLabel('reg1')}</span></div>
 <div class="scale-row"><span>כל קהל היעד השתתף בכל המפגשים</span><span>${scLabel('reg2')}</span></div>
 <div class="scale-row"><span>תכנון המפגשים</span><span>${scLabel('qu1')}</span></div>
 <div class="scale-row"><span>התאמת המנחה לרציונל התוכנית</span><span>${scLabel('qu2')}</span></div>
 <div class="scale-row"><span>מטרות התוכנית מיושמות</span><span>${scLabel('qu3')}</span></div>
-<div class="scale-row"><span>מידת שביעות רצון התלמידים גבוהה</span><span>${scLabel('qu4')}</span></div>
-<div class="scale-row"><span>המורים המעורבים בתוכנית מביעים שביעות רצון גבוהה</span><span>${scLabel('qu5')}</span></div>
-<div class="scale-row"><span>קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר</span><span>${scLabel('pr1')}</span></div>
-<div class="scale-row"><span>תשתיות ומשאבים מספיקים להמשך הפעלת התוכנית</span><span>${scLabel('pr2')}</span></div>
+<div class="scale-row"><span>שביעות רצון התלמידים</span><span>${scLabel('qu4')}</span></div>
+<div class="scale-row"><span>שביעות רצון המורים</span><span>${scLabel('qu5')}</span></div>
+<div class="scale-row"><span>עדויות לשינוי</span><span>${scLabel('pr1')}</span></div>
+<div class="scale-row"><span>תשתיות ומשאבים מספיקים</span><span>${scLabel('pr2')}</span></div>
 ${d.notes?.n7 ? `<div class="note-box"><b>עדויות לשינוי:</b><br>${d.notes.n7}</div>` : ''}
-
-<h2>שלב ג׳ — הערכת סוף תוכנית</h2>
-<div class="scale-row"><span>הושג שיפור בתחום הנבחר במסגרת התוכנית</span><span>${scLabel('out1')}</span></div>
-<div class="scale-row"><span>שביעות הרצון של קהל היעד המשתתף בתוכנית גבוהה</span><span>${scLabel('out2')}</span></div>
-<div class="scale-row"><span>התוצאות שהושגו מצביעות על כדאיות ההשקעה בתוכנית</span><span>${scLabel('out4')}</span></div>
+<h2>שלב ג׳</h2>
+<div class="scale-row"><span>הושג שיפור בתחום הנבחר</span><span>${scLabel('out1')}</span></div>
+<div class="scale-row"><span>שביעות רצון קהל היעד</span><span>${scLabel('out2')}</span></div>
+<div class="scale-row"><span>כדאיות ההשקעה בתוכנית</span><span>${scLabel('out4')}</span></div>
 ${d.notes?.n9 ? `<div class="note-box"><b>מה לא עבד:</b><br>${d.notes.n9}</div>` : ''}
 ${d.notes?.n10 ? `<div class="note-box"><b>מה עבד טוב:</b><br>${d.notes.n10}</div>` : ''}
 ${d.notes?.n11 ? `<div class="note-box"><b>המלצה לשנה הבאה:</b><br>${d.notes.n11}</div>` : ''}
-
 <h2>סיכום והחלטה</h2>
 ${d.decision ? `<div class="decision-box">החלטה: ${decMap[d.decision] || d.decision}</div>` : ''}
 ${d.notes?.n12 ? `<div class="note-box"><b>הנמקה:</b><br>${d.notes.n12}</div>` : ''}
 ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.notes.n13}</div>` : ''}
-
-<div class="footer">נוצר על ידי כלי הערכת תוכניות חינוכיות | מחוז חיפה | ${new Date().toLocaleString('he-IL')}</div>
-</body>
-</html>`;
+<div class="footer">כלי הערכת תוכניות חינוכיות | מחוז חיפה | ${new Date().toLocaleString('he-IL')}</div>
+</body></html>`;
 
     const iframe = document.createElement('iframe');
     iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
@@ -133,10 +109,7 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
     iframe.contentDocument.write(html);
     iframe.contentDocument.close();
     iframe.contentWindow.focus();
-    setTimeout(() => {
-      iframe.contentWindow.print();
-      setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 600);
+    setTimeout(() => { iframe.contentWindow.print(); setTimeout(() => document.body.removeChild(iframe), 2000); }, 600);
   }
 
   return (
@@ -146,14 +119,12 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
 
       <div className="phase-content">
         <div className="ph-banner p4">
-          <span style={{ fontSize: '1.5rem' }}>🏆</span>
           <div>
             <h3>סיכום ולקחים</h3>
             <p>תמונה כוללת של הערכת התוכנית — ציונים, תובנות ומסקנות</p>
           </div>
         </div>
 
-        {/* כרטיסי ציון */}
         <div className="sum-grid">
           {[
             { label: 'שלב א׳ — הכנה',    score: scores[0], color: 'var(--navy)' },
@@ -167,19 +138,18 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
           ))}
         </div>
 
-        {/* תובנות */}
         <div className="rec-box">
-          <h4>💡 תובנות אוטומטיות</h4>
+          <h4>תובנות אוטומטיות</h4>
           <ul style={{ marginBottom: 12 }}>
             {insights.map((t, i) => <li key={i}>{t}</li>)}
           </ul>
-          <h4 style={{ color: '#b7800a', marginTop: 10 }}>🛠️ דרכי פעולה מומלצות</h4>
+          <h4 style={{ color: '#b7800a', marginTop: 10 }}>דרכי פעולה מומלצות</h4>
           <ul style={{ marginBottom: 12 }}>
             {actions.length
               ? actions.map((t, i) => <li key={i}>{t}</li>)
               : <li style={{ listStyle: 'none', color: 'var(--gray)', fontStyle: 'italic' }}>אין פריטים להצגה</li>}
           </ul>
-          <h4 style={{ color: 'var(--navy)', marginTop: 10 }}>📊 דרכי שיפור הנתונים</h4>
+          <h4 style={{ color: 'var(--navy)', marginTop: 10 }}>דרכי שיפור הנתונים</h4>
           <ul>
             {dataRecs.length
               ? dataRecs.map((t, i) => <li key={i}>{t}</li>)
@@ -187,14 +157,13 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
           </ul>
         </div>
 
-        {/* החלטה */}
-        <Section icon="🔮" iconBg="#fdecea" title="החלטה על המשך התוכנית" desc="סכמו את ההחלטה לאחר עיון בכל הנתונים" defaultOpen>
+        <Section icon="📝" iconBg="#fdecea" title="החלטה על המשך התוכנית" desc="סכמו את ההחלטה לאחר עיון בכל הנתונים" defaultOpen>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', padding: '12px 0' }}>
             {[
-              { value: 'continue', label: '✅ לשמר את הקיים' },
-              { value: 'modify',   label: '🔄 להמשיך עם שינויים' },
-              { value: 'replace',  label: '🔁 להחליף בתוכנית אחרת' },
-              { value: 'stop',     label: '❌ לא להמשיך' },
+              { value: 'continue', label: 'לשמר את הקיים' },
+              { value: 'modify',   label: 'להמשיך עם שינויים' },
+              { value: 'replace',  label: 'להחליף בתוכנית אחרת' },
+              { value: 'stop',     label: 'לא להמשיך' },
             ].map(opt => (
               <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.87rem', cursor: 'pointer' }}>
                 <input type="radio" name="decision" value={opt.value}
@@ -209,7 +178,6 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
           <textarea className="na" value={notes.n12} onChange={e => setNote('n12', e.target.value)} placeholder="הנמקה מפורטת..." />
         </Section>
 
-        {/* הערות כלליות */}
         <Section icon="📝" iconBg="#e8f5f2" title="הערות סיכום כלליות" defaultOpen>
           <textarea className="na" style={{ minHeight: 100 }} value={notes.n13}
                     onChange={e => setNote('n13', e.target.value)} placeholder="סיכום כולל של הערכת התוכנית..." />
@@ -217,11 +185,11 @@ ${d.notes?.n13 ? `<div class="note-box"><b>הערות כלליות:</b><br>${d.n
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
           <button className="btn-main" style={{ maxWidth: 320 }} onClick={() => save(true)} disabled={saving}>
-            💾 שמור והגש הערכה סופית
+            שמור והגש הערכה סופית
           </button>
           <button className="btn-main" style={{ maxWidth: 260, background: 'linear-gradient(135deg,#1a2744,#243052)' }}
                   onClick={handlePrint}>
-            📄 הדפס / הורד דוח
+            הדפס / הורד דוח
           </button>
         </div>
       </div>
