@@ -24,7 +24,7 @@ export default function BotWidget() {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/bot`, {
+      const res = await fetch(`${BACKEND_URL}/bot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMessages })
