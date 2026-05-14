@@ -1,4 +1,5 @@
 import { getEmoji, getVerbal } from '../constants/scoreCalc';
+import BotWidget from './BotWidget';
 
 export function BottomNav({ phaseIndex, score, onPrev, onNext, nextLabel = 'הבא ←', showPrev = true }) {
   const hasScore = score > 0;
@@ -17,6 +18,7 @@ export function BottomNav({ phaseIndex, score, onPrev, onNext, nextLabel = 'הב
             {getVerbal(score, phaseIndex)}
           </span>
         )}
+        <BotWidget />
       </div>
       {onNext
         ? <button className="btn-next" onClick={onNext}>{nextLabel}</button>
