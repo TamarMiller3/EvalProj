@@ -3,28 +3,29 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
+    console.log('🤖 Bot request received');
     const { messages } = req.body;
-    
+    console.log('Messages:', JSON.stringify(messages?.slice(-1)));
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    console.log('API Key exists:', !!apiKey);
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: {
             parts: [{ text: `אתה עוזר מקצועי לבניית כלי הערכה ומדידה בחינוך, בעברית.
-אתה מסייע לרכזות הערכה ומנהלי בתי ספר לבנות שאלונים, סקרים, מחוונים ותוכניות הערכה.
 כללים:
 1. תמיד ענה בעברית בלבד.
-2. התאם שפה לקהל היעד המדויק.
-3. לתלמידים א-ג: שאלות קצרות עם אמוג'י פנים (😊😐😞), גוף ראשון "אני".
-4. לתלמידים ד-ו: שאלות ברורות, סולם 1-3.
-5. לחטיבה/תיכון: ליקרט 1-5.
-6. למורים/מנהלים: שאלות מקצועיות.
-7. שאלות ממוקדות בנושא שהוזכר בלבד.
-8. לעולם אל תשאל תלמידים על שיתוף פעולה בצוות.
-9. אם חסר מידע — שאל תחילה.
-10. הצג שאלות ממוספרות עם הסבר על הסולם.` }]
+2. לתלמידים א-ג: שאלות עם אמוג'י פנים (😊😐😞), גוף ראשון.
+3. לתלמידים ד-ו: סולם 1-3.
+4. לחטיבה/תיכון: ליקרט 1-5.
+5. למורים/מנהלים: שאלות מקצועיות.
+6. שאלות ממוקדות בנושא בלבד.
+7. אם חסר מידע — שאל תחילה.` }]
           },
           contents: messages.map(m => ({
             role: m.role === 'user' ? 'user' : 'model',
@@ -34,12 +35,15 @@ router.post('/', async (req, res) => {
       }
     );
 
+    console.log('Gemini status:', response.status);
     const data = await response.json();
+    console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
+
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'מצטערת, הייתה שגיאה. נסי שוב.';
     res.json({ text });
 
   } catch (err) {
-    console.error('Bot error:', err);
+    console.error('❌ Bot error:', err.message);
     res.status(500).json({ text: 'שגיאה בשרת. נסי שוב.' });
   }
 });
