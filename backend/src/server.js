@@ -2,9 +2,9 @@ require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
 const { connect } = require('./storage/db');
-
 const evaluationsRouter = require('./routes/evaluations');
 const adminRouter       = require('./routes/admin');
+const botRouter         = require('./routes/bot');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -17,9 +17,10 @@ app.use(express.json());
 
 app.use('/api/evaluations', evaluationsRouter);
 app.use('/api/admin',       adminRouter);
+app.use('/api/bot',         botRouter);
+
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-// Connect to MongoDB first, then start server
 connect()
   .then(() => {
     app.listen(PORT, () => {
