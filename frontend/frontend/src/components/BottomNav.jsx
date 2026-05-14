@@ -1,5 +1,5 @@
 import { getEmoji, getVerbal } from '../constants/scoreCalc';
-import BotWidget from './BotWidget';
+import BotWidget from '../BotWidget';
 
 export function BottomNav({ phaseIndex, score, onPrev, onNext, nextLabel = 'הבא ←', showPrev = true }) {
   const hasScore = score > 0;
