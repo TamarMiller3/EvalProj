@@ -126,4 +126,7 @@ export default function BotWidget() {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>עוזר מדידה</div>
           <div style={{ fontSize: 10, color: '#b45309' }}>בנה כלי הערכה</div>
         </div>
-      </b
+     </button>
+</>
+  );
+}
