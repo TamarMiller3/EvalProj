@@ -10,21 +10,13 @@ router.post('/', async (req, res) => {
     console.log('API Key exists:', !!apiKey);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: {
-            parts: [{ text: `אתה עוזר מקצועי לבניית כלי הערכה ומדידה בחינוך, בעברית.
-כללים:
-1. תמיד ענה בעברית בלבד.
-2. לתלמידים א-ג: שאלות עם אמוג'י פנים (😊😐😞).
-3. לתלמידים ד-ו: סולם 1-3.
-4. לחטיבה/תיכון: ליקרט 1-5.
-5. למורים/מנהלים: שאלות מקצועיות.
-6. שאלות ממוקדות בנושא בלבד.
-7. אם חסר מידע — שאל תחילה.` }]
+            parts: [{ text: `אתה מומחה פדגוגי בכיר לתחום המדידה והערכה בחינוך. עזור לאנשי חינוך להגדיר יעדי SMART, לבחור כלי הערכה (מחוונים, סקרים, תלקיטים) ולנסח אותם בפועל. זכור: אם המשתמש מזין שמות או פרטים אישיים של תלמידים, עליך להתריע מיד שאסור להזין מידע רגיש ולבקש לנסח מחדש באנונימיות.` }]
           },
           contents: messages.map(m => ({
             role: m.role === 'user' ? 'user' : 'model',
@@ -37,6 +29,11 @@ router.post('/', async (req, res) => {
     console.log('Gemini status:', response.status);
     const data = await response.json();
     console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
+
+    if (!response.ok) {
+      console.error('Gemini error:', data);
+      return res.status(500).json({ text: 'מצטערת, הייתה שגיאה. נסי שוב.' });
+    }
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'מצטערת, הייתה שגיאה. נסי שוב.';
     res.json({ text });
