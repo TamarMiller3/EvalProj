@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://evalproj.onrender.com';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://evalproj-1.onrender.com';
 
 export default function BotWidget() {
   const [open, setOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function BotWidget() {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/bot`, {
+      const res = await fetch(`${BACKEND_URL}/api/bot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMessages })
