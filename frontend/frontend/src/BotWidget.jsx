@@ -110,7 +110,7 @@ export default function BotWidget() {
               style={{ flex: 1, border: '1.5px solid #e2e8f0', borderRadius: 9, padding: '7px 10px', fontSize: 12, outline: 'none', direction: 'rtl', fontFamily: 'inherit' }} />
             <button onClick={() => send(input)} disabled={loading || !input.trim()}
               style={{ width: 32, height: 32, background: '#2563eb', border: 'none', borderRadius: 9, cursor: 'pointer', color: '#fff', fontSize: 14 }}>
-              &gt;
+              {"›"}
             </button>
           </div>
         </div>
