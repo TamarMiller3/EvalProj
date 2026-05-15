@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -6,7 +7,7 @@ export default function BotWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    content: 'שלום! אני עוזר ההערכה והמדידה שלך 👋\n\nאני יוצר שאלונים, סקרים ומחוונים מותאמים אישית לכל קהל ונושא.\n\nבמה אוכל לעזור? 😊'
+    content: 'שלום! אני מומחה פדגוגי למדידה והערכה 👋\n\nאוכל לעזור לך להגדיר יעדי SMART, לבנות מחוונים, סקרים ותלקיטים.\n\nבמה אוכל לעזור? 😊'
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,18 +45,11 @@ export default function BotWidget() {
     { l: '🗺️ תוכנית הערכה',  v: 'אני רוצה לבנות תוכנית הערכה' },
   ];
 
-  function lines(text) {
-    return text.split('\n').map((l, i, arr) => (
-      <span key={i}>{l}{i < arr.length - 1 && <br />}</span>
-    ));
-  }
-
   return (
     <>
-      {/* Chat window */}
       {open && (
         <div style={{
-          position: 'fixed', bottom: 70, left: 20, width: 320, height: 420,
+          position: 'fixed', bottom: 70, left: 20, width: 340, height: 480,
           background: '#fff', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
           display: 'flex', flexDirection: 'column', zIndex: 1000,
           border: '1px solid #e2e8f0', direction: 'rtl'
@@ -70,22 +64,33 @@ export default function BotWidget() {
             <button onClick={() => setOpen(false)} style={{ marginRight: 'auto', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 13 }}>✕</button>
           </div>
 
+          {/* Privacy Warning */}
+          <div style={{
+            background: '#fff8e1', borderBottom: '1px solid #ffe082',
+            padding: '7px 12px', fontSize: 11, color: '#7a5f00', flexShrink: 0, textAlign: 'right'
+          }}>
+            ⚠️ <strong>שמירה על פרטיות:</strong> אנא אל תזינו שמות תלמידים, מספרי זהות או נתונים אישיים מזהים
+          </div>
+
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {messages.map((m, i) => (
-              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-end', flexDirection: m.role === 'user' ? 'row-reverse' : 'row' }}>
-                <div style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, background: m.role === 'user' ? 'linear-gradient(135deg,#7c3aed,#a855f7)' : 'linear-gradient(135deg,#2563eb,#0d9488)' }}>
+              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flexDirection: m.role === 'user' ? 'row-reverse' : 'row' }}>
+                <div style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, marginTop: 4, background: m.role === 'user' ? 'linear-gradient(135deg,#7c3aed,#a855f7)' : 'linear-gradient(135deg,#2563eb,#0d9488)' }}>
                   {m.role === 'user' ? '👤' : '🤖'}
                 </div>
-                <div style={{ maxWidth: '82%', padding: '8px 11px', borderRadius: 11, fontSize: 12.5, lineHeight: 1.6, background: m.role === 'user' ? 'linear-gradient(135deg,#2563eb,#3b82f6)' : '#f8fafc', color: m.role === 'user' ? '#fff' : '#1e293b', border: m.role === 'user' ? 'none' : '1px solid #e2e8f0', borderBottomRightRadius: m.role === 'assistant' ? 2 : 11, borderBottomLeftRadius: m.role === 'user' ? 2 : 11 }}>
-                  {lines(m.content)}
+                <div style={{ maxWidth: '82%', padding: '8px 11px', borderRadius: 11, fontSize: 12.5, lineHeight: 1.6, background: m.role === 'user' ? 'linear-gradient(135deg,#2563eb,#3b82f6)' : '#f8fafc', color: m.role === 'user' ? '#fff' : '#1e293b', border: m.role === 'user' ? 'none' : '1px solid #e2e8f0' }}>
+                  {m.role === 'assistant'
+                    ? <ReactMarkdown>{m.content}</ReactMarkdown>
+                    : m.content
+                  }
                 </div>
               </div>
             ))}
             {loading && (
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg,#2563eb,#0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🤖</div>
-                <div style={{ padding: '10px 12px', borderRadius: 11, borderBottomRightRadius: 2, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 4 }}>
+                <div style={{ padding: '10px 12px', borderRadius: 11, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 4 }}>
                   {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#94a3b8', animation: 'bounce 1.2s infinite', animationDelay: `${i*0.2}s` }} />)}
                 </div>
               </div>
@@ -117,21 +122,10 @@ export default function BotWidget() {
         </div>
       )}
 
-      {/* Bot button in bottom bar */}
       <button onClick={() => setOpen(!open)} style={{
         display: 'flex', alignItems: 'center', gap: 8,
         background: open ? 'linear-gradient(135deg,#fef3c7,#fde68a)' : 'linear-gradient(135deg,#fffbeb,#fef3c7)',
         border: '2px solid #f59e0b', borderRadius: 12,
         padding: '8px 14px', cursor: 'pointer', flexShrink: 0
       }}>
-        <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#f59e0b,#fbbf24)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>🤖</div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>עוזר מדידה</div>
-          <div style={{ fontSize: 10, color: '#b45309' }}>בנה כלי הערכה</div>
-        </div>
-      </button>
-
-      <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}`}</style>
-    </>
-  );
-}
+        <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#f59e0b,#fbbf24)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center
