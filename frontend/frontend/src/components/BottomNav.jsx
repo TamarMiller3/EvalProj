@@ -1,5 +1,4 @@
 import { getEmoji, getVerbal } from '../constants/scoreCalc';
-import BotWidget from '../BotWidget';
 
 export function BottomNav({ phaseIndex, score, onPrev, onNext, nextLabel = 'הבא ←', showPrev = true }) {
   const hasScore = score > 0;
@@ -18,7 +17,16 @@ export function BottomNav({ phaseIndex, score, onPrev, onNext, nextLabel = 'הב
             {getVerbal(score, phaseIndex)}
           </span>
         )}
-        <BotWidget />
+        <a href="https://gemini.google.com/gem/1M3nW7mH9BrTXIgV5iMCOf96X0vR4JdG1?usp=sharing"
+           target="_blank"
+           rel="noopener noreferrer"
+           style={{ display:'flex', alignItems:'center', gap:8, background:'#1a2a4a', borderRadius:12, padding:'8px 14px', textDecoration:'none', flexShrink:0 }}>
+          <span style={{ fontSize:18 }}>🤖</span>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#fff' }}>עוזר מדידה</div>
+            <div style={{ fontSize:10, color:'#90caf9' }}>בנה כלי הערכה</div>
+          </div>
+        </a>
       </div>
       {onNext
         ? <button className="btn-next" onClick={onNext}>{nextLabel}</button>
