@@ -41,129 +41,131 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
               fields={fields} currentPhase={0} scores={scores}
               onSave={() => save(true)} saving={saving} onNavigate={onNavigate} />
 
-      <div className="phase-content">
-        <div className="ph-banner p1">
-          <div>
-            <h3>שלב א׳ — טרום תוכנית <small style={{ fontWeight: 400, opacity: 0.7 }}>(מאי–יוני)</small></h3>
-            <p>מיפוי צרכים, בחירת תוכנית, תכנון מערך ההערכה.</p>
-          </div>
-        </div>
-
-        <Section title="פרטי התוכנית" desc="מלאו לפני תחילת ההערכה" defaultOpen>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>שם התוכנית *</label>
-              <input value={fields['f-prog']} onChange={e => setField('f-prog', e.target.value)} placeholder="שם התוכנית" />
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>שנת לימודים</label>
-              <input value={fields['f-year']} onChange={e => setField('f-year', e.target.value)} placeholder="תשפ״ו" />
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>וותק התוכנית בבית הספר</label>
-              <select value={fields['f-seniority']} onChange={e => setField('f-seniority', e.target.value)}>
-                <option value="">בחר וותק</option>
-                {SENIORITY_OPTIONS.map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>קהל יעד</label>
-              <select value={fields['f-target']} onChange={e => setField('f-target', e.target.value)}>
-                <option value="">בחר כיתה / שכבה</option>
-                {TARGET_OPTIONS.map(g => (
-                  <optgroup key={g.group} label={g.group}>
-                    {g.options.map(o => <option key={o}>{o}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>יעדי התוכנית</label>
-              <select value={fields['f-domain']} onChange={e => setField('f-domain', e.target.value)}>
-                <option value="">בחר יעד</option>
-                {GOAL_OPTIONS.map(o => <option key={o}>{o}</option>)}
-              </select>
-              {fields['f-domain'] === 'אחר' && (
-                <input value={fields['f-domain-other']} onChange={e => setField('f-domain-other', e.target.value)}
-                  placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
-                  borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
-              )}
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>תחום</label>
-              <select value={fields['f-area']} onChange={e => setField('f-area', e.target.value)}>
-                <option value="">בחר תחום</option>
-                {DOMAIN_OPTIONS.map(o => <option key={o}>{o}</option>)}
-              </select>
-              {fields['f-area'] === 'אחר' && (
-                <input value={fields['f-area-other']} onChange={e => setField('f-area-other', e.target.value)}
-                  placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
-                  borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
-              )}
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>מספר אנשי צוות</label>
-              <input type="number" value={fields['f-contact']} onChange={e => setField('f-contact', e.target.value)} placeholder="מספר" />
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>מספר תלמידים</label>
-              <input type="number" value={fields['f-num']} onChange={e => setField('f-num', e.target.value)} placeholder="מספר" />
+      <div className="phase-layout">
+        <div className="phase-content">
+          <div className="ph-banner p1">
+            <div>
+              <h3>שלב א׳ — טרום תוכנית <small style={{ fontWeight: 400, opacity: 0.7 }}>(מאי–יוני)</small></h3>
+              <p>מיפוי צרכים, בחירת תוכנית, תכנון מערך ההערכה.</p>
             </div>
           </div>
-        </Section>
 
-        <div className="progress-wrap">
-          <div className="progress-lbl">התקדמות שלב א׳</div>
-          <div className="pb-outer"><div className="pb-inner" style={{ width: `${scores[0]}%` }} /></div>
-          <div className="pb-num">{scores[0]}%</div>
+          <Section title="פרטי התוכנית" desc="מלאו לפני תחילת ההערכה" defaultOpen>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>שם התוכנית *</label>
+                <input value={fields['f-prog']} onChange={e => setField('f-prog', e.target.value)} placeholder="שם התוכנית" />
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>שנת לימודים</label>
+                <input value={fields['f-year']} onChange={e => setField('f-year', e.target.value)} placeholder="תשפ״ו" />
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>וותק התוכנית בבית הספר</label>
+                <select value={fields['f-seniority']} onChange={e => setField('f-seniority', e.target.value)}>
+                  <option value="">בחר וותק</option>
+                  {SENIORITY_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>קהל יעד</label>
+                <select value={fields['f-target']} onChange={e => setField('f-target', e.target.value)}>
+                  <option value="">בחר כיתה / שכבה</option>
+                  {TARGET_OPTIONS.map(g => (
+                    <optgroup key={g.group} label={g.group}>
+                      {g.options.map(o => <option key={o}>{o}</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>יעדי התוכנית</label>
+                <select value={fields['f-domain']} onChange={e => setField('f-domain', e.target.value)}>
+                  <option value="">בחר יעד</option>
+                  {GOAL_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                </select>
+                {fields['f-domain'] === 'אחר' && (
+                  <input value={fields['f-domain-other']} onChange={e => setField('f-domain-other', e.target.value)}
+                    placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
+                    borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
+                )}
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>תחום</label>
+                <select value={fields['f-area']} onChange={e => setField('f-area', e.target.value)}>
+                  <option value="">בחר תחום</option>
+                  {DOMAIN_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                </select>
+                {fields['f-area'] === 'אחר' && (
+                  <input value={fields['f-area-other']} onChange={e => setField('f-area-other', e.target.value)}
+                    placeholder="פרט/י..." style={{ marginTop: 8, width: '100%', border: '2px solid var(--border)',
+                    borderRadius: 10, padding: '10px 13px', fontFamily: 'Heebo', fontSize: '0.93rem', background: 'var(--gray-light)' }} />
+                )}
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>מספר אנשי צוות</label>
+                <input type="number" value={fields['f-contact']} onChange={e => setField('f-contact', e.target.value)} placeholder="מספר" />
+              </div>
+              <div className="fg" style={{ margin: 0 }}>
+                <label>מספר תלמידים</label>
+                <input type="number" value={fields['f-num']} onChange={e => setField('f-num', e.target.value)} placeholder="מספר" />
+              </div>
+            </div>
+          </Section>
+
+          <div className="progress-wrap">
+            <div className="progress-lbl">התקדמות שלב א׳</div>
+            <div className="pb-outer"><div className="pb-inner" style={{ width: `${scores[0]}%` }} /></div>
+            <div className="pb-num">{scores[0]}%</div>
+          </div>
+
+          <Section title="מיפוי צרכים בית-ספרי" desc="זיהוי הצורך המרכזי" defaultOpen>
+            {checkboxes1.map(c => (
+              <div key={c.id} className="ci">
+                <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
+                <label htmlFor={c.id}>{c.label}</label>
+              </div>
+            ))}
+            <span className="nl">הצורך המרכזי שזוהה:</span>
+            <textarea className="na" value={notes.n1} onChange={e => setNote('n1', e.target.value)} placeholder="תארו את הצורך..." />
+          </Section>
+
+          <Section title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
+            {checkboxes2.map(c => (
+              <div key={c.id} className="ci">
+                <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
+                <label htmlFor={c.id}>{c.label}</label>
+              </div>
+            ))}
+            <span className="nl">הסבר על ההלימה:</span>
+            <textarea className="na" value={notes.n2} onChange={e => setNote('n2', e.target.value)} placeholder="כיצד התוכנית עונה על הצורך?" />
+          </Section>
+
+          <Section title="משאבים ותשתית" desc="כוח אדם, שעות, ציוד, תקציב">
+            {checkboxes3.map(c => (
+              <div key={c.id} className="ci">
+                <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
+                <label htmlFor={c.id}>{c.label}</label>
+              </div>
+            ))}
+            <span className="nl">פרטי משאבים:</span>
+            <textarea className="na" value={notes.n3} onChange={e => setNote('n3', e.target.value)} placeholder="כוח אדם, שעות שבועיות, תקציב..." />
+          </Section>
+
+          <Section title="מדדי הערכה וצמתי מעקב" desc="תכנון מראש של מה, מתי ואיך מודדים">
+            {checkboxes4.map(c => (
+              <div key={c.id} className="ci">
+                <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
+                <label htmlFor={c.id}>{c.label}</label>
+              </div>
+            ))}
+            <span className="nl">פירוט מדדים ויעדים:</span>
+            <textarea className="na" value={notes.n4} onChange={e => setNote('n4', e.target.value)} placeholder="למשל: 80% נוכחות, עלייה ב-10% בציוני קריאה..." />
+          </Section>
         </div>
 
-        <Section title="מיפוי צרכים בית-ספרי" desc="זיהוי הצורך המרכזי" defaultOpen>
-          {checkboxes1.map(c => (
-            <div key={c.id} className="ci">
-              <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
-              <label htmlFor={c.id}>{c.label}</label>
-            </div>
-          ))}
-          <span className="nl">הצורך המרכזי שזוהה:</span>
-          <textarea className="na" value={notes.n1} onChange={e => setNote('n1', e.target.value)} placeholder="תארו את הצורך..." />
-        </Section>
-
-        <Section title="בחירת התוכנית והלימה לצורך" desc="האם התוכנית שנרכשה מתאימה לצורך?">
-          {checkboxes2.map(c => (
-            <div key={c.id} className="ci">
-              <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
-              <label htmlFor={c.id}>{c.label}</label>
-            </div>
-          ))}
-          <span className="nl">הסבר על ההלימה:</span>
-          <textarea className="na" value={notes.n2} onChange={e => setNote('n2', e.target.value)} placeholder="כיצד התוכנית עונה על הצורך?" />
-        </Section>
-
-        <Section title="משאבים ותשתית" desc="כוח אדם, שעות, ציוד, תקציב">
-          {checkboxes3.map(c => (
-            <div key={c.id} className="ci">
-              <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
-              <label htmlFor={c.id}>{c.label}</label>
-            </div>
-          ))}
-          <span className="nl">פרטי משאבים:</span>
-          <textarea className="na" value={notes.n3} onChange={e => setNote('n3', e.target.value)} placeholder="כוח אדם, שעות שבועיות, תקציב..." />
-        </Section>
-
-        <Section title="מדדי הערכה וצמתי מעקב" desc="תכנון מראש של מה, מתי ואיך מודדים">
-          {checkboxes4.map(c => (
-            <div key={c.id} className="ci">
-              <input type="checkbox" id={c.id} checked={!!checks[c.id]} onChange={e => setCheck(c.id, e.target.checked)} />
-              <label htmlFor={c.id}>{c.label}</label>
-            </div>
-          ))}
-          <span className="nl">פירוט מדדים ויעדים:</span>
-          <textarea className="na" value={notes.n4} onChange={e => setNote('n4', e.target.value)} placeholder="למשל: 80% נוכחות, עלייה ב-10% בציוני קריאה..." />
-        </Section>
+        <BottomNav phaseIndex={0} score={scores[0]} scores={scores} showPrev={false} onNext={onNext} />
       </div>
-
-      <BottomNav phaseIndex={0} score={scores[0]} showPrev={false} onNext={onNext} />
     </div>
   );
 }
