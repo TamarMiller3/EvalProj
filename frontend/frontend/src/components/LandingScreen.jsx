@@ -58,7 +58,7 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   }
 
   return (
-    <div className="screen landing-screen" style={{ display: 'flex' }}>
+   <div className="screen landing-screen" style={{ display: 'flex', minHeight: '100vh', alignItems: 'flex-start', overflowY: 'auto' }}>
       <div className="landing-card">
 
         {/* לוגואים */}
