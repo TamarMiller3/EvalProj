@@ -1,4 +1,4 @@
-xport const CHECKS = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10',
+export const CHECKS = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10',
   'c11','c12','c13','c14','c15','c16','c17','c18','c19'];
 
 export const SCALES = ['reg1','reg2','qu1','qu2','qu3','qu4','qu5',
