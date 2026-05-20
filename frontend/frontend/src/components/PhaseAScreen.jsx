@@ -35,6 +35,17 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
     { id: 'c18', label: 'נקבע יעד ספציפי ומדיד להגדרת ההצלחה' },
   ];
 
+  // קהל יעד — בחירה מרובה
+  const selectedTargets = fields['f-target'] ? fields['f-target'].split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  function toggleTarget(option) {
+    const current = selectedTargets;
+    const updated = current.includes(option)
+      ? current.filter(o => o !== option)
+      : [...current, option];
+    setField('f-target', updated.join(', '));
+  }
+
   return (
     <div className={`screen${active ? ' active' : ''}`}>
       <Topbar userName={userName} userCode={userCode} userSchool={userSchool}
@@ -64,17 +75,6 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
               <select value={fields['f-seniority']} onChange={e => setField('f-seniority', e.target.value)}>
                 <option value="">בחר וותק</option>
                 {SENIORITY_OPTIONS.map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div className="fg" style={{ margin: 0 }}>
-              <label>קהל יעד</label>
-              <select value={fields['f-target']} onChange={e => setField('f-target', e.target.value)}>
-                <option value="">בחר כיתה / שכבה</option>
-                {TARGET_OPTIONS.map(g => (
-                  <optgroup key={g.group} label={g.group}>
-                    {g.options.map(o => <option key={o}>{o}</option>)}
-                  </optgroup>
-                ))}
               </select>
             </div>
             <div className="fg" style={{ margin: 0 }}>
@@ -109,6 +109,39 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
               <label>מספר תלמידים</label>
               <input type="number" value={fields['f-num']} onChange={e => setField('f-num', e.target.value)} placeholder="מספר" />
             </div>
+          </div>
+
+          {/* קהל יעד — בחירה מרובה */}
+          <div className="fg" style={{ margin: '12px 0 0' }}>
+            <label>קהל יעד (ניתן לבחור מספר אפשרויות)</label>
+            {TARGET_OPTIONS.map(group => (
+              <div key={group.group} style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray)', marginBottom: 6 }}>{group.group}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {group.options.map(option => {
+                    const isSelected = selectedTargets.includes(option);
+                    return (
+                      <button key={option} onClick={() => toggleTarget(option)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 20, fontSize: '0.82rem',
+                          fontFamily: 'Heebo', cursor: 'pointer', transition: 'all 0.15s',
+                          border: `1.5px solid ${isSelected ? 'var(--teal)' : 'var(--border)'}`,
+                          background: isSelected ? 'var(--teal)' : 'var(--gray-light)',
+                          color: isSelected ? 'white' : 'var(--navy)',
+                          fontWeight: isSelected ? 700 : 400,
+                        }}>
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {selectedTargets.length > 0 && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--teal)', marginTop: 6 }}>
+                נבחר: {selectedTargets.join(', ')}
+              </div>
+            )}
           </div>
         </Section>
 
@@ -167,4 +200,3 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
     </div>
   );
 }
-
