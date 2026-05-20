@@ -79,6 +79,76 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
                 {SENIORITY_OPTIONS.map(o => <option key={o}>{o}</option>)}
               </select>
             </div>
+
+            {/* קהל יעד — dropdown עם checkboxes, בתוך ה-grid */}
+            <div className="fg" style={{ margin: 0, position: 'relative' }}>
+              <label>קהל יעד</label>
+              <div
+                onClick={() => setTargetOpen(!targetOpen)}
+                style={{
+                  width: '100%', border: '2px solid var(--border)', borderRadius: 10,
+                  padding: '11px 13px', fontFamily: 'Heebo', fontSize: '0.93rem',
+                  background: 'var(--gray-light)', cursor: 'pointer',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  color: selectedTargets.length > 0 ? '#1e293b' : '#9ca3af'
+                }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '85%' }}>
+                  {selectedTargets.length > 0 ? selectedTargets.join(', ') : 'בחר כיתה / שכבה'}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--gray)', flexShrink: 0 }}>{targetOpen ? '▲' : '▼'}</span>
+              </div>
+              {targetOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 100,
+                  background: 'white', border: '2px solid var(--teal)', borderRadius: 10,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 280, overflowY: 'auto'
+                }}>
+                  {TARGET_OPTIONS.map(group => (
+                    <div key={group.group}>
+                      <div style={{ padding: '8px 14px', fontSize: '0.72rem', fontWeight: 700,
+                                    color: 'var(--gray)', background: 'var(--gray-light)',
+                                    borderBottom: '1px solid var(--border)' }}>
+                        {group.group}
+                      </div>
+                      {group.options.map(option => {
+                        const isSelected = selectedTargets.includes(option);
+                        return (
+                          <div key={option}
+                            onClick={e => { e.stopPropagation(); toggleTarget(option); }}
+                            style={{
+                              padding: '10px 14px', cursor: 'pointer', fontSize: '0.88rem',
+                              display: 'flex', alignItems: 'center', gap: 10,
+                              background: isSelected ? 'var(--teal-light)' : 'white',
+                              borderBottom: '1px solid var(--border)',
+                              color: isSelected ? 'var(--teal)' : '#1e293b',
+                              fontWeight: isSelected ? 700 : 400,
+                            }}>
+                            <span style={{
+                              width: 16, height: 16, border: `2px solid ${isSelected ? 'var(--teal)' : 'var(--border)'}`,
+                              borderRadius: 4, background: isSelected ? 'var(--teal)' : 'white',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0, fontSize: '0.7rem', color: 'white'
+                            }}>
+                              {isSelected ? '✓' : ''}
+                            </span>
+                            {option}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                  <div style={{ padding: '8px 14px', textAlign: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); setTargetOpen(false); }}
+                      style={{ padding: '6px 20px', background: 'var(--teal)', color: 'white',
+                               border: 'none', borderRadius: 8, fontFamily: 'Heebo',
+                               fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>
+                      סגור
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="fg" style={{ margin: 0 }}>
               <label>יעדי התוכנית</label>
               <select value={fields['f-domain']} onChange={e => setField('f-domain', e.target.value)}>
@@ -111,73 +181,6 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
               <label>מספר תלמידים</label>
               <input type="number" value={fields['f-num']} onChange={e => setField('f-num', e.target.value)} placeholder="מספר" />
             </div>
-          </div>
-
-          {/* קהל יעד — dropdown עם checkboxes */}
-          <div className="fg" style={{ margin: '12px 0 0', position: 'relative' }}>
-            <label>קהל יעד</label>
-            <div
-              onClick={() => setTargetOpen(!targetOpen)}
-              style={{
-                width: '100%', border: '2px solid var(--border)', borderRadius: 10,
-                padding: '11px 13px', fontFamily: 'Heebo', fontSize: '0.93rem',
-                background: 'var(--gray-light)', cursor: 'pointer',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                color: selectedTargets.length > 0 ? '#1e293b' : '#9ca3af'
-              }}>
-              <span>{selectedTargets.length > 0 ? selectedTargets.join(', ') : 'בחר כיתה / שכבה'}</span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--gray)' }}>{targetOpen ? '▲' : '▼'}</span>
-            </div>
-            {targetOpen && (
-              <div style={{
-                position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 100,
-                background: 'white', border: '2px solid var(--teal)', borderRadius: 10,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 280, overflowY: 'auto'
-              }}>
-                {TARGET_OPTIONS.map(group => (
-                  <div key={group.group}>
-                    <div style={{ padding: '8px 14px', fontSize: '0.72rem', fontWeight: 700,
-                                  color: 'var(--gray)', background: 'var(--gray-light)',
-                                  borderBottom: '1px solid var(--border)' }}>
-                      {group.group}
-                    </div>
-                    {group.options.map(option => {
-                      const isSelected = selectedTargets.includes(option);
-                      return (
-                        <div key={option}
-                          onClick={e => { e.stopPropagation(); toggleTarget(option); }}
-                          style={{
-                            padding: '10px 14px', cursor: 'pointer', fontSize: '0.88rem',
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            background: isSelected ? 'var(--teal-light)' : 'white',
-                            borderBottom: '1px solid var(--border)',
-                            color: isSelected ? 'var(--teal)' : '#1e293b',
-                            fontWeight: isSelected ? 700 : 400,
-                          }}>
-                          <span style={{
-                            width: 16, height: 16, border: `2px solid ${isSelected ? 'var(--teal)' : 'var(--border)'}`,
-                            borderRadius: 4, background: isSelected ? 'var(--teal)' : 'white',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0, fontSize: '0.7rem', color: 'white'
-                          }}>
-                            {isSelected ? '✓' : ''}
-                          </span>
-                          {option}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-                <div style={{ padding: '8px 14px', textAlign: 'center' }}>
-                  <button onClick={() => setTargetOpen(false)}
-                    style={{ padding: '6px 20px', background: 'var(--teal)', color: 'white',
-                             border: 'none', borderRadius: 8, fontFamily: 'Heebo',
-                             fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>
-                    סגור
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </Section>
 
