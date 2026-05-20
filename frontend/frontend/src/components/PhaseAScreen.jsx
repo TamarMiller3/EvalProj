@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Topbar } from './Topbar';
 import { Section } from './Section';
 import { BottomNav } from './BottomNav';
@@ -6,6 +7,7 @@ import { TARGET_OPTIONS, SENIORITY_OPTIONS, GOAL_OPTIONS, DOMAIN_OPTIONS } from 
 export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
   const { userName, userCode, userSchool, fields, setField, checks, setCheck,
           notes, setNote, scores, save, saving } = ev;
+  const [targetOpen, setTargetOpen] = useState(false);
 
   const checkboxes1 = [
     { id: 'c1', label: 'הושלם תהליך מיפוי תמונת מצב בית ספרית' },
@@ -38,6 +40,13 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
   const selectedTargets = fields['f-target']
     ? fields['f-target'].split(',').map(s => s.trim()).filter(Boolean)
     : [];
+
+  function toggleTarget(option) {
+    const updated = selectedTargets.includes(option)
+      ? selectedTargets.filter(o => o !== option)
+      : [...selectedTargets, option];
+    setField('f-target', updated.join(', '));
+  }
 
   return (
     <div className={`screen${active ? ' active' : ''}`}>
@@ -104,26 +113,69 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
             </div>
           </div>
 
-          <div className="fg" style={{ margin: '12px 0 0' }}>
-            <label>קהל יעד (ניתן לבחור מספר אפשרויות — Ctrl+לחיצה)</label>
-            <select multiple
-              value={selectedTargets}
-              onChange={e => {
-                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                setField('f-target', selected.join(', '));
-              }}
-              style={{ width: '100%', border: '2px solid var(--border)', borderRadius: 10,
-                       padding: '8px', fontFamily: 'Heebo', fontSize: '0.9rem',
-                       background: 'var(--gray-light)', minHeight: 120 }}>
-              {TARGET_OPTIONS.map(g => (
-                <optgroup key={g.group} label={g.group}>
-                  {g.options.map(o => <option key={o} value={o}>{o}</option>)}
-                </optgroup>
-              ))}
-            </select>
-            {selectedTargets.length > 0 && (
-              <div style={{ fontSize: '0.75rem', color: 'var(--teal)', marginTop: 6 }}>
-                נבחר: {selectedTargets.join(', ')}
+          {/* קהל יעד — dropdown עם checkboxes */}
+          <div className="fg" style={{ margin: '12px 0 0', position: 'relative' }}>
+            <label>קהל יעד</label>
+            <div
+              onClick={() => setTargetOpen(!targetOpen)}
+              style={{
+                width: '100%', border: '2px solid var(--border)', borderRadius: 10,
+                padding: '11px 13px', fontFamily: 'Heebo', fontSize: '0.93rem',
+                background: 'var(--gray-light)', cursor: 'pointer',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                color: selectedTargets.length > 0 ? '#1e293b' : '#9ca3af'
+              }}>
+              <span>{selectedTargets.length > 0 ? selectedTargets.join(', ') : 'בחר כיתה / שכבה'}</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--gray)' }}>{targetOpen ? '▲' : '▼'}</span>
+            </div>
+            {targetOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 100,
+                background: 'white', border: '2px solid var(--teal)', borderRadius: 10,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 280, overflowY: 'auto'
+              }}>
+                {TARGET_OPTIONS.map(group => (
+                  <div key={group.group}>
+                    <div style={{ padding: '8px 14px', fontSize: '0.72rem', fontWeight: 700,
+                                  color: 'var(--gray)', background: 'var(--gray-light)',
+                                  borderBottom: '1px solid var(--border)' }}>
+                      {group.group}
+                    </div>
+                    {group.options.map(option => {
+                      const isSelected = selectedTargets.includes(option);
+                      return (
+                        <div key={option}
+                          onClick={e => { e.stopPropagation(); toggleTarget(option); }}
+                          style={{
+                            padding: '10px 14px', cursor: 'pointer', fontSize: '0.88rem',
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            background: isSelected ? 'var(--teal-light)' : 'white',
+                            borderBottom: '1px solid var(--border)',
+                            color: isSelected ? 'var(--teal)' : '#1e293b',
+                            fontWeight: isSelected ? 700 : 400,
+                          }}>
+                          <span style={{
+                            width: 16, height: 16, border: `2px solid ${isSelected ? 'var(--teal)' : 'var(--border)'}`,
+                            borderRadius: 4, background: isSelected ? 'var(--teal)' : 'white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, fontSize: '0.7rem', color: 'white'
+                          }}>
+                            {isSelected ? '✓' : ''}
+                          </span>
+                          {option}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                <div style={{ padding: '8px 14px', textAlign: 'center' }}>
+                  <button onClick={() => setTargetOpen(false)}
+                    style={{ padding: '6px 20px', background: 'var(--teal)', color: 'white',
+                             border: 'none', borderRadius: 8, fontFamily: 'Heebo',
+                             fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>
+                    סגור
+                  </button>
+                </div>
               </div>
             )}
           </div>
