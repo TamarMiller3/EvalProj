@@ -35,16 +35,9 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
     { id: 'c18', label: 'נקבע יעד ספציפי ומדיד להגדרת ההצלחה' },
   ];
 
-  // קהל יעד — בחירה מרובה
-  const selectedTargets = fields['f-target'] ? fields['f-target'].split(',').map(s => s.trim()).filter(Boolean) : [];
-
-  function toggleTarget(option) {
-    const current = selectedTargets;
-    const updated = current.includes(option)
-      ? current.filter(o => o !== option)
-      : [...current, option];
-    setField('f-target', updated.join(', '));
-  }
+  const selectedTargets = fields['f-target']
+    ? fields['f-target'].split(',').map(s => s.trim()).filter(Boolean)
+    : [];
 
   return (
     <div className={`screen${active ? ' active' : ''}`}>
@@ -111,32 +104,23 @@ export function PhaseAScreen({ eval: ev, onNext, onNavigate, active }) {
             </div>
           </div>
 
-          {/* קהל יעד — בחירה מרובה */}
           <div className="fg" style={{ margin: '12px 0 0' }}>
-            <label>קהל יעד (ניתן לבחור מספר אפשרויות)</label>
-            {TARGET_OPTIONS.map(group => (
-              <div key={group.group} style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray)', marginBottom: 6 }}>{group.group}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {group.options.map(option => {
-                    const isSelected = selectedTargets.includes(option);
-                    return (
-                      <button key={option} onClick={() => toggleTarget(option)}
-                        style={{
-                          padding: '5px 12px', borderRadius: 20, fontSize: '0.82rem',
-                          fontFamily: 'Heebo', cursor: 'pointer', transition: 'all 0.15s',
-                          border: `1.5px solid ${isSelected ? 'var(--teal)' : 'var(--border)'}`,
-                          background: isSelected ? 'var(--teal)' : 'var(--gray-light)',
-                          color: isSelected ? 'white' : 'var(--navy)',
-                          fontWeight: isSelected ? 700 : 400,
-                        }}>
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+            <label>קהל יעד (ניתן לבחור מספר אפשרויות — Ctrl+לחיצה)</label>
+            <select multiple
+              value={selectedTargets}
+              onChange={e => {
+                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                setField('f-target', selected.join(', '));
+              }}
+              style={{ width: '100%', border: '2px solid var(--border)', borderRadius: 10,
+                       padding: '8px', fontFamily: 'Heebo', fontSize: '0.9rem',
+                       background: 'var(--gray-light)', minHeight: 120 }}>
+              {TARGET_OPTIONS.map(g => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.options.map(o => <option key={o} value={o}>{o}</option>)}
+                </optgroup>
+              ))}
+            </select>
             {selectedTargets.length > 0 && (
               <div style={{ fontSize: '0.75rem', color: 'var(--teal)', marginTop: 6 }}>
                 נבחר: {selectedTargets.join(', ')}
