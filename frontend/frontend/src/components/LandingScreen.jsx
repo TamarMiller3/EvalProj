@@ -3,12 +3,13 @@ import { api } from '../api';
 import { generateCode } from '../constants/scoreCalc';
 
 export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
-  const [name, setName]           = useState('');
-  const [school, setSchool]       = useState('');
-  const [principal, setPrincipal] = useState('');
-  const [codeReady, setCodeReady] = useState(false);
-  const [error, setError]         = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [name, setName]               = useState('');
+  const [school, setSchool]           = useState('');
+  const [principal, setPrincipal]     = useState('');
+  const [supervisor, setSupervisor]   = useState('');
+  const [codeReady, setCodeReady]     = useState(false);
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(false);
 
   const [searchSymbol, setSearchSymbol]   = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -37,9 +38,10 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   }
 
   async function handleCreate() {
-    if (!name)      return setError('יש להכניס סמל מוסד');
-    if (!school)    return setError('יש להכניס שם בית הספר');
-    if (!principal) return setError('יש להכניס שם מנהל/ת');
+    if (!name)       return setError('יש להכניס סמל מוסד');
+    if (!school)     return setError('יש להכניס שם בית הספר');
+    if (!principal)  return setError('יש להכניס שם מנהל/ת');
+    if (!supervisor) return setError('יש להכניס שם מפקח/ת');
     setLoading(true);
     setError('');
     const code = generateCode();
@@ -58,7 +60,7 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
   }
 
   return (
-   <div className="screen landing-screen" style={{ display: 'flex', minHeight: '100vh', alignItems: 'flex-start', overflowY: 'auto' }}>
+    <div className="screen landing-screen" style={{ display: 'flex', minHeight: '100vh', alignItems: 'flex-start', overflowY: 'auto' }}>
       <div className="landing-card">
 
         {/* לוגואים */}
@@ -155,6 +157,10 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
           <label>שם מנהל/ת בית הספר</label>
           <input value={principal} onChange={e => setPrincipal(e.target.value)} placeholder="שם מנהל/ת" />
         </div>
+        <div className="fg">
+          <label>שם המפקח/ת</label>
+          <input value={supervisor} onChange={e => setSupervisor(e.target.value)} placeholder="שם המפקח/ת" />
+        </div>
 
         {error && <p className="err-line" style={{ marginBottom: 10 }}>❌ {error}</p>}
 
@@ -179,4 +185,3 @@ export function LandingScreen({ onNewUser, onReturnUser, onAdmin }) {
     </div>
   );
 }
-
