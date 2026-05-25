@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { api } from '../api';
-
+import { generateInsights } from '../constants/scoreCalc';
 
 export function AdminScreen({ onBack, active }) {
   const [authed, setAuthed]     = useState(false);
@@ -23,8 +23,8 @@ export function AdminScreen({ onBack, active }) {
 
   async function loadEntries() {
     setLoading(true);
-      try {
-          const data = await api.adminGetEntries(pw);
+    try {
+      const data = await api.adminGetEntries(pw);
       setEntries(data);
     } finally {
       setLoading(false);
@@ -34,16 +34,56 @@ export function AdminScreen({ onBack, active }) {
   function exportXlsx() {
     if (!entries.length) return;
     const dh = { continue: 'להמשיך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
-    const H = ['שם', 'בית ספר', 'קוד', 'תוכנית', 'שנה', 'קהל יעד', 'תחום', 'שלב-א-%', 'מהלך-%', 'תוצאות-%', 'החלטה', 'תאריך'];
-    const rows = entries.map(e => [
-      e.userName, e.userSchool, e.userCode,
-      e.fields?.['f-prog'] || '', e.fields?.['f-year'] || '',
-      e.fields?.['f-target'] || '', e.fields?.['f-domain'] || '',
-      (e.phase1_pct || 0) + '%', (e.phase2_pct || 0) + '%', (e.phase3_pct || 0) + '%',
-      dh[e.decision] || '',
-      new Date(e.savedAt).toLocaleString('he-IL')
-    ]);
+
+    const H = [
+      'סמל מוסד', 'שם בית ספר', 'שם מנהל/ת', 'שם מפקח/ת', 'קוד',
+      'שם תוכנית', 'שנת לימודים', 'קהל יעד', 'תחום', 'יעד',
+      'שלב א׳ %', 'שלב ב׳ %', 'שלב ג׳ %',
+      'החלטה', 'הנמקה', 'הערות סיכום',
+      'תובנות אוטומטיות', 'דרכי פעולה מומלצות', 'דרכי שיפור נתונים',
+      'תאריך עדכון'
+    ];
+
+    const rows = entries.map(e => {
+      const scores = [e.phase1_pct || 0, e.phase2_pct || 0, e.phase3_pct || 0, 0];
+      const { insights, actions, dataRecs } = generateInsights(e, scores);
+
+      return [
+        e.userName || '',
+        e.userSchool || '',
+        e.userPrincipal || '',
+        e.userSupervisor || '',
+        e.userCode || '',
+        e.fields?.['f-prog'] || '',
+        e.fields?.['f-year'] || '',
+        e.fields?.['f-target'] || '',
+        e.fields?.['f-domain'] || '',
+        e.fields?.['f-area'] || '',
+        (e.phase1_pct || 0) + '%',
+        (e.phase2_pct || 0) + '%',
+        (e.phase3_pct || 0) + '%',
+        dh[e.decision] || '',
+        e.notes?.n12 || '',
+        e.notes?.n13 || '',
+        insights.join(' | '),
+        actions.join(' | '),
+        dataRecs.join(' | '),
+        new Date(e.savedAt).toLocaleString('he-IL')
+      ];
+    });
+
     const ws = XLSX.utils.aoa_to_sheet([H, ...rows]);
+
+    // רוחב עמודות
+    ws['!cols'] = [
+      { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 12 },
+      { wch: 22 }, { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 16 },
+      { wch: 10 }, { wch: 10 }, { wch: 10 },
+      { wch: 14 }, { wch: 40 }, { wch: 40 },
+      { wch: 50 }, { wch: 50 }, { wch: 50 },
+      { wch: 18 }
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'נתונים');
     XLSX.writeFile(wb, `RAMA_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`);
@@ -61,7 +101,7 @@ export function AdminScreen({ onBack, active }) {
             <div style={{ fontSize: '2.2rem' }}>🔐</div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--navy)', margin: '10px 0 5px' }}>כניסת מנהל מערכת</h2>
             <p style={{ fontSize: '0.81rem', color: 'var(--gray)', marginBottom: 22 }}>הכנס/י את סיסמת המנהל</p>
-            <input type="password" value={pw} onChange={e => setPw(e.target.value)}
+            <input type="password" autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)}
                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
                    placeholder="סיסמה"
                    style={{ width: '100%', border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px', fontFamily: 'Heebo', fontSize: '1rem', textAlign: 'center', letterSpacing: 3, background: 'var(--gray-light)', marginBottom: 13 }} />
@@ -78,7 +118,7 @@ export function AdminScreen({ onBack, active }) {
         <h1>🛡️ מנהל מערכת — כל הנתונים</h1>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={exportXlsx} style={{ padding: '9px 20px', borderRadius: 9, fontFamily: 'Heebo', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'var(--green)', color: 'white' }}>📥 ייצוא לאקסל</button>
-          <button onClick={onBack}      style={{ padding: '9px 20px', borderRadius: 9, fontFamily: 'Heebo', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white' }}>← יציאה</button>
+          <button onClick={onBack}     style={{ padding: '9px 20px', borderRadius: 9, fontFamily: 'Heebo', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white' }}>← יציאה</button>
         </div>
       </div>
 
@@ -103,13 +143,13 @@ export function AdminScreen({ onBack, active }) {
           <table className="atable">
             <thead>
               <tr>
-                <th>שם</th><th>בית ספר</th><th>תוכנית</th><th>תחום</th>
+                <th>שם</th><th>בית ספר</th><th>מפקח/ת</th><th>תוכנית</th><th>תחום</th>
                 <th>הכנה</th><th>מהלך</th><th>תוצאות</th><th>החלטה</th><th>עדכון</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={9} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>טוען...</td></tr>}
-              {!loading && !entries.length && <tr><td colSpan={9} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>אין נתונים עדיין</td></tr>}
+              {loading && <tr><td colSpan={10} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>טוען...</td></tr>}
+              {!loading && !entries.length && <tr><td colSpan={10} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>אין נתונים עדיין</td></tr>}
               {entries.map((e, i) => {
                 const dt = new Date(e.savedAt);
                 const ds = dt.toLocaleDateString('he-IL') + ' ' + dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
@@ -117,6 +157,7 @@ export function AdminScreen({ onBack, active }) {
                   <tr key={i}>
                     <td><strong>{e.userName || '—'}</strong></td>
                     <td>{e.userSchool || '—'}</td>
+                    <td>{e.userSupervisor || '—'}</td>
                     <td>{e.fields?.['f-prog'] || '—'}</td>
                     <td>{e.fields?.['f-domain'] || '—'}</td>
                     <td><span className={`abadge ${bc(e.phase1_pct)}`}>{e.phase1_pct || 0}%</span></td>
