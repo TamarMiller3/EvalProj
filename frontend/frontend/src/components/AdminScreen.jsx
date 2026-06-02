@@ -229,7 +229,7 @@ export function AdminScreen({ onBack, active }) {
     th: {
       background: '#e8f0fa', color: '#1a3a5c', padding: '10px 13px',
       textAlign: 'right', fontWeight: 700, fontSize: '0.75rem',
-      borderBottom: '2px solid #d0ddf0', whiteSpace: 'nowrap', position: 'sticky', top: 0
+      borderBottom: '2px solid #d0ddf0', whiteSpace: 'nowrap'
     },
     td: {
       padding: '9px 13px', color: '#1a2233',
