@@ -10,7 +10,6 @@ export function AdminScreen({ onBack, active }) {
   const [entries, setEntries]   = useState([]);
   const [loading, setLoading]   = useState(false);
 
-  // ── פילטרים ──
   const [filterDecision,   setFilterDecision]   = useState('all');
   const [filterColor,      setFilterColor]      = useState('all');
   const [filterSupervisor, setFilterSupervisor] = useState('all');
@@ -36,7 +35,6 @@ export function AdminScreen({ onBack, active }) {
     }
   }
 
-  // ── ציון → צבע ──
   function colorOf(pct) {
     if (pct == null) return 'none';
     if (pct >= 80) return 'green';
@@ -44,25 +42,21 @@ export function AdminScreen({ onBack, active }) {
     return 'red';
   }
 
-  // ── צבע כולל לשורה (הציון הנמוך ביותר מבין 3 השלבים) ──
   function rowColor(e) {
     const vals = [e.phase1_pct, e.phase2_pct, e.phase3_pct].filter(v => v != null);
     if (!vals.length) return 'none';
-    const min = Math.min(...vals);
-    return colorOf(min);
+    return colorOf(Math.min(...vals));
   }
 
-  // ── רשימת מפקחים ייחודיים מהנתונים ──
   const supervisors = useMemo(() => {
     const s = new Set(entries.map(e => e.userSupervisor).filter(Boolean));
     return [...s].sort();
   }, [entries]);
 
-  // ── סינון ──
   const filtered = useMemo(() => {
     return entries.filter(e => {
-      if (filterDecision !== 'all' && e.decision !== filterDecision) return false;
-      if (filterColor !== 'all' && rowColor(e) !== filterColor) return false;
+      if (filterDecision   !== 'all' && e.decision       !== filterDecision)   return false;
+      if (filterColor      !== 'all' && rowColor(e)      !== filterColor)      return false;
       if (filterSupervisor !== 'all' && e.userSupervisor !== filterSupervisor) return false;
       return true;
     });
@@ -76,12 +70,17 @@ export function AdminScreen({ onBack, active }) {
 
   const isFiltered = filterDecision !== 'all' || filterColor !== 'all' || filterSupervisor !== 'all';
 
-  // ── עזרי תצוגה ──
-  const bc  = v => v >= 80 ? 'ab-g' : v >= 50 ? 'ab-y' : 'ab-r';
-  const dh  = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
+  const dh = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
   const formatDate = s => s ? new Date(s).toLocaleDateString('he-IL') : '—';
 
-  // ── ייצוא אקסל ──
+  // ציון → CSS class לטבלה הבהירה
+  function badgeClass(pct) {
+    if (pct == null) return 'badge-none';
+    if (pct >= 80) return 'badge-green';
+    if (pct >= 50) return 'badge-yellow';
+    return 'badge-red';
+  }
+
   function exportXlsx() {
     if (!filtered.length) return;
     const H = [
@@ -89,8 +88,7 @@ export function AdminScreen({ onBack, active }) {
       'שם תוכנית','שנת לימודים','קהל יעד','תחום','יעד',
       'שלב א׳ %','שלב ב׳ %','שלב ג׳ %',
       'החלטה','הנמקה','הערות סיכום',
-      'תובנות אוטומטיות','דרכי פעולה מומלצות','דרכי שיפור נתונים',
-      'תאריך עדכון'
+      'תובנות אוטומטיות','דרכי פעולה מומלצות','דרכי שיפור נתונים','תאריך עדכון'
     ];
     const rows = filtered.map(e => {
       const scores = [e.phase1_pct||0, e.phase2_pct||0, e.phase3_pct||0, 0];
@@ -111,10 +109,10 @@ export function AdminScreen({ onBack, active }) {
     XLSX.writeFile(wb, 'kalanit_export.xlsx');
   }
 
-  // ── הדפסת דוח ──
   function handlePrint(e) {
     const w = window.open('', '_blank');
     const dLabel = dh[e.decision] || '—';
+    const bClass = v => v >= 80 ? 'bg' : v >= 50 ? 'by' : 'br';
     w.document.write(`<!DOCTYPE html><html dir="rtl"><head>
       <meta charset="utf-8"/>
       <title>דוח הערכה — ${e.userSchool||''}</title>
@@ -136,34 +134,27 @@ export function AdminScreen({ onBack, active }) {
     </head><body>
       <h1>🌸 דוח הערכת תוכנית — כלנית</h1>
       <div class="sub">תאריך: ${formatDate(e.savedAt)}</div>
-      <div class="section">
-        <h2>פרטי המוסד</h2>
+      <div class="section"><h2>פרטי המוסד</h2>
         <div class="row"><span class="lbl">סמל מוסד</span><span class="val">${e.userName||'—'}</span></div>
         <div class="row"><span class="lbl">שם בית הספר</span><span class="val">${e.userSchool||'—'}</span></div>
         <div class="row"><span class="lbl">שם מנהל/ת</span><span class="val">${e.userPrincipal||'—'}</span></div>
         <div class="row"><span class="lbl">שם מפקח/ת</span><span class="val">${e.userSupervisor||'—'}</span></div>
       </div>
-      <div class="section">
-        <h2>פרטי התוכנית</h2>
+      <div class="section"><h2>פרטי התוכנית</h2>
         <div class="row"><span class="lbl">שם תוכנית</span><span class="val">${e.fields?.['f-prog']||'—'}</span></div>
         <div class="row"><span class="lbl">שנת לימודים</span><span class="val">${e.fields?.['f-year']||'—'}</span></div>
         <div class="row"><span class="lbl">קהל יעד</span><span class="val">${e.fields?.['f-target']||'—'}</span></div>
         <div class="row"><span class="lbl">תחום</span><span class="val">${e.fields?.['f-domain']||'—'}</span></div>
       </div>
-      <div class="section">
-        <h2>ציונים לפי שלבים</h2>
-        <div class="row"><span class="lbl">שלב א׳ — טרום</span>
-          <span class="badge ${bc(e.phase1_pct)==='ab-g'?'bg':bc(e.phase1_pct)==='ab-y'?'by':'br'}">${e.phase1_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ב׳ — מהלך</span>
-          <span class="badge ${bc(e.phase2_pct)==='ab-g'?'bg':bc(e.phase2_pct)==='ab-y'?'by':'br'}">${e.phase2_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ג׳ — סוף</span>
-          <span class="badge ${bc(e.phase3_pct)==='ab-g'?'bg':bc(e.phase3_pct)==='ab-y'?'by':'br'}">${e.phase3_pct||0}%</span></div>
+      <div class="section"><h2>ציונים לפי שלבים</h2>
+        <div class="row"><span class="lbl">שלב א׳ — טרום</span><span class="badge ${bClass(e.phase1_pct)}">${e.phase1_pct||0}%</span></div>
+        <div class="row"><span class="lbl">שלב ב׳ — מהלך</span><span class="badge ${bClass(e.phase2_pct)}">${e.phase2_pct||0}%</span></div>
+        <div class="row"><span class="lbl">שלב ג׳ — סוף</span><span class="badge ${bClass(e.phase3_pct)}">${e.phase3_pct||0}%</span></div>
       </div>
-      <div class="section">
-        <h2>החלטה והנמקה</h2>
+      <div class="section"><h2>החלטה והנמקה</h2>
         <div class="row"><span class="lbl">המלצה</span><span class="val">${dLabel}</span></div>
         <div class="row"><span class="lbl">הנמקה</span><span class="val">${e.decision_reason||'—'}</span></div>
-        <div class="row"><span class="lbl">הערות סיכום</span><span class="val">${e.summary_notes||'—'}</span></div>
+        <div class="row"><span class="lbl">הערות</span><span class="val">${e.summary_notes||'—'}</span></div>
       </div>
     </body></html>`);
     w.document.close();
@@ -171,91 +162,190 @@ export function AdminScreen({ onBack, active }) {
     setTimeout(() => w.print(), 400);
   }
 
-  // ── סטטיסטיקות (על הנתונים המסוננים) ──
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const avgMid  = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
-  const avgAll  = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
+  const avgMid = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
+  const avgAll = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
   const fullCount = filtered.filter(e=>e.phase1_pct>=60).length;
 
-  // ── DROP-DOWN STYLE ──
-  const dropStyle = {
-    padding: '8px 14px', borderRadius: 9, border: '1.5px solid var(--border,#dde3ee)',
-    fontFamily: 'Heebo', fontSize: '0.83rem', background: 'white', color: '#1a2233',
-    cursor: 'pointer', outline: 'none', direction: 'rtl'
+  // ── סגנונות inline לדשבורד הבהיר ──
+  const S = {
+    wrap: {
+      display: 'flex', flexDirection: 'column',
+      width: '100%', height: '100vh',
+      background: '#f0f4f8', fontFamily: 'Heebo, Arial, sans-serif',
+      direction: 'rtl', overflow: 'hidden'
+    },
+    header: {
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '12px 24px', background: '#1a3a5c', flexShrink: 0,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+    },
+    h1: { color: 'white', fontSize: '1rem', fontWeight: 800, margin: 0 },
+    body: {
+      flex: 1, overflowY: 'auto', padding: '20px 24px 40px',
+      WebkitOverflowScrolling: 'touch'
+    },
+    statGrid: {
+      display: 'grid', gridTemplateColumns: 'repeat(4,1fr)',
+      gap: 12, marginBottom: 18
+    },
+    statCard: {
+      background: 'white', borderRadius: 12, padding: '14px 18px',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center'
+    },
+    statVal: { fontSize: '1.6rem', fontWeight: 800, color: '#1a3a5c' },
+    statLbl: { fontSize: '0.75rem', color: '#888', marginTop: 2 },
+    filterBar: {
+      display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap',
+      background: 'white', borderRadius: 12, padding: '14px 18px',
+      marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+      border: '1.5px solid #dde3ee'
+    },
+    filterTitle: { fontSize: '0.82rem', fontWeight: 700, color: '#1a3a5c', alignSelf: 'center', marginLeft: 4 },
+    filterGroup: { display: 'flex', flexDirection: 'column', gap: 3 },
+    filterLabel: { fontSize: '0.71rem', color: '#888' },
+    select: {
+      padding: '7px 12px', borderRadius: 8, border: '1.5px solid #dde3ee',
+      fontFamily: 'Heebo', fontSize: '0.82rem', background: 'white',
+      color: '#1a2233', cursor: 'pointer', outline: 'none', direction: 'rtl',
+      minWidth: 140
+    },
+    selectActive: {
+      padding: '7px 12px', borderRadius: 8, border: '1.5px solid #4a90d9',
+      fontFamily: 'Heebo', fontSize: '0.82rem', background: '#e8f3fd',
+      color: '#1a3a5c', cursor: 'pointer', outline: 'none', direction: 'rtl',
+      fontWeight: 700, minWidth: 140
+    },
+    resetBtn: {
+      padding: '7px 14px', borderRadius: 8, border: 'none',
+      background: '#fde8e8', color: '#9c1a1a', fontFamily: 'Heebo',
+      fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer'
+    },
+    tableWrap: {
+      background: 'white', borderRadius: 12,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflowX: 'auto'
+    },
+    table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' },
+    th: {
+      background: '#e8f0fa', color: '#1a3a5c', padding: '10px 13px',
+      textAlign: 'right', fontWeight: 700, fontSize: '0.75rem',
+      borderBottom: '2px solid #d0ddf0', whiteSpace: 'nowrap', position: 'sticky', top: 0
+    },
+    td: {
+      padding: '9px 13px', color: '#1a2233',
+      borderBottom: '1px solid #f0f4f8', verticalAlign: 'middle'
+    },
+    tdAlt: {
+      padding: '9px 13px', color: '#1a2233',
+      borderBottom: '1px solid #f0f4f8', verticalAlign: 'middle',
+      background: '#fafbfd'
+    },
+    btnPrint: {
+      padding: '5px 10px', borderRadius: 7, border: 'none',
+      background: '#e8f3fd', color: '#1a5a9c', fontFamily: 'Heebo',
+      fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+    },
+    btnXlsx: {
+      padding: '9px 18px', borderRadius: 9, fontFamily: 'Heebo',
+      fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+      border: 'none', background: '#27ae60', color: 'white', whiteSpace: 'nowrap'
+    },
+    btnBack: {
+      padding: '9px 18px', borderRadius: 9, fontFamily: 'Heebo',
+      fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+      border: 'none', background: 'rgba(255,255,255,0.15)', color: 'white', whiteSpace: 'nowrap'
+    },
   };
-  const activeDropStyle = { ...dropStyle, borderColor: '#4a90d9', background: '#e8f3fd', fontWeight: 700 };
+
+  // badge צבע לטבלה הבהירה
+  function BadgeCell({ pct }) {
+    if (pct == null) return <span style={{ color:'#bbb' }}>—</span>;
+    const bg = pct>=80?'#d4edda':pct>=50?'#fff3cd':'#f8d7da';
+    const cl = pct>=80?'#155724':pct>=50?'#856404':'#721c24';
+    return (
+      <span style={{ display:'inline-block', padding:'2px 10px', borderRadius:8,
+                     background:bg, color:cl, fontWeight:700, fontSize:'0.75rem' }}>
+        {pct}%
+      </span>
+    );
+  }
 
   return (
-    <div className={`screen admin-screen${active ? ' active' : ''}`} style={{ display: 'flex' }}>
+    <div style={{ ...S.wrap, display: active ? 'flex' : 'none' }}>
 
       {/* ── כניסה ── */}
       {!authed && (
-        <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center' }}>
-          <div style={{ background:'white',borderRadius:20,padding:38,maxWidth:360,width:'90%',textAlign:'center' }}>
+        <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',
+                      backdropFilter:'blur(8px)',zIndex:200,display:'flex',
+                      alignItems:'center',justifyContent:'center' }}>
+          <div style={{ background:'white',borderRadius:20,padding:38,
+                        maxWidth:360,width:'90%',textAlign:'center' }}>
             <div style={{ fontSize:'2.2rem' }}>🔐</div>
-            <h2 style={{ fontSize:'1.25rem',fontWeight:800,color:'var(--navy)',margin:'10px 0 5px' }}>כניסת מנהל מערכת</h2>
-            <p style={{ fontSize:'0.81rem',color:'var(--gray)',marginBottom:22 }}>הכנס/י את סיסמת המנהל</p>
-            <input type="password" autoComplete="new-password" value={pw} onChange={e=>setPw(e.target.value)}
-                   onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="סיסמה"
-                   style={{ width:'100%',border:'2px solid var(--border)',borderRadius:10,padding:'11px 13px',fontFamily:'Heebo',fontSize:'1rem',textAlign:'center',letterSpacing:3,background:'var(--gray-light)',marginBottom:13 }} />
-            {pwError && <p style={{ color:'var(--red)',fontSize:'0.8rem',marginBottom:10 }}>❌ סיסמה שגויה</p>}
-            <button className="btn-main" onClick={handleLogin}>כניסה</button>
+            <h2 style={{ fontSize:'1.25rem',fontWeight:800,color:'#1a3a5c',margin:'10px 0 5px' }}>
+              כניסת מנהל מערכת
+            </h2>
+            <p style={{ fontSize:'0.81rem',color:'#888',marginBottom:22 }}>הכנס/י את סיסמת המנהל</p>
+            <input type="password" autoComplete="new-password" value={pw}
+                   onChange={e=>setPw(e.target.value)}
+                   onKeyDown={e=>e.key==='Enter'&&handleLogin()}
+                   placeholder="סיסמה"
+                   style={{ width:'100%',border:'2px solid #dde3ee',borderRadius:10,
+                            padding:'11px 13px',fontFamily:'Heebo',fontSize:'1rem',
+                            textAlign:'center',letterSpacing:3,background:'#f4f7fb',marginBottom:13 }} />
+            {pwError && <p style={{ color:'#c0392b',fontSize:'0.8rem',marginBottom:10 }}>❌ סיסמה שגויה</p>}
+            <button onClick={handleLogin}
+              style={{ width:'100%',padding:'12px',borderRadius:10,border:'none',
+                       background:'#1a3a5c',color:'white',fontFamily:'Heebo',
+                       fontSize:'1rem',fontWeight:700,cursor:'pointer' }}>
+              כניסה
+            </button>
             <br/><br/>
-            <button onClick={onBack} style={{ background:'none',border:'none',color:'var(--gray)',cursor:'pointer',fontSize:'0.8rem',fontFamily:'Heebo' }}>← חזור</button>
+            <button onClick={onBack}
+              style={{ background:'none',border:'none',color:'#888',
+                       cursor:'pointer',fontSize:'0.8rem',fontFamily:'Heebo' }}>
+              ← חזור
+            </button>
           </div>
         </div>
       )}
 
       {/* ── כותרת ── */}
-      <div className="admin-header">
-        <h1>🛡️ מנהל מערכת — כל הנתונים</h1>
-        <div style={{ display:'flex',gap:10 }}>
-          <button onClick={exportXlsx}
-            style={{ padding:'9px 20px',borderRadius:9,fontFamily:'Heebo',fontSize:'0.83rem',fontWeight:700,cursor:'pointer',border:'none',background:'var(--green)',color:'white' }}>
-            📥 ייצוא לאקסל {isFiltered ? `(${filtered.length})` : ''}
+      <div style={S.header}>
+        <h1 style={S.h1}>🛡️ מנהל מערכת — כל הנתונים</h1>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={exportXlsx} style={S.btnXlsx}>
+            📥 ייצוא לאקסל{isFiltered ? ` (${filtered.length})` : ''}
           </button>
-          <button onClick={onBack}
-            style={{ padding:'9px 20px',borderRadius:9,fontFamily:'Heebo',fontSize:'0.83rem',fontWeight:700,cursor:'pointer',border:'none',background:'rgba(255,255,255,0.1)',color:'white' }}>
-            ← יציאה
-          </button>
+          <button onClick={onBack} style={S.btnBack}>← יציאה</button>
         </div>
       </div>
 
-      <div className="admin-body">
+      {/* ── גוף גלילה ── */}
+      <div style={S.body}>
 
-        {/* ── כרטיסי סטטיסטיקה ── */}
-        <div className="admin-stat-grid">
+        {/* כרטיסי סטטיסטיקה */}
+        <div style={S.statGrid}>
           {[
-            { v: filtered.length,          l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
-            { v: fullCount,                l: 'הגשות מלאות' },
-            { v: avgMid != null ? avgMid+'%' : '—', l: 'ממוצע מהלך' },
-            { v: avgAll != null ? avgAll+'%' : '—', l: 'ממוצע כללי' },
-          ].map(({v,l}) => (
-            <div key={l} className="admin-stat-card">
-              <div className="asc-val">{v ?? '—'}</div>
-              <div className="asc-lbl">{l}</div>
+            { v: filtered.length,                              l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
+            { v: fullCount,                                    l: 'הגשות מלאות' },
+            { v: avgMid != null ? avgMid + '%' : '—',         l: 'ממוצע מהלך' },
+            { v: avgAll != null ? avgAll + '%' : '—',         l: 'ממוצע כללי' },
+          ].map(({ v, l }) => (
+            <div key={l} style={S.statCard}>
+              <div style={S.statVal}>{v ?? '—'}</div>
+              <div style={S.statLbl}>{l}</div>
             </div>
           ))}
         </div>
 
-        {/* ══════════════════════════════════════
-            🔽  שורת פילטרים
-        ══════════════════════════════════════ */}
-        <div style={{
-          display:'flex', gap:12, alignItems:'center', flexWrap:'wrap',
-          background:'#f4f7fb', borderRadius:12, padding:'14px 18px',
-          margin:'0 0 18px', border:'1.5px solid #dde3ee'
-        }}>
-          <span style={{ fontSize:'0.85rem', fontWeight:700, color:'#1a3a5c', marginLeft:4 }}>🔽 סינון:</span>
+        {/* שורת פילטרים */}
+        <div style={S.filterBar}>
+          <span style={S.filterTitle}>🔽 סינון:</span>
 
-          {/* פילטר המלצה */}
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <label style={{ fontSize:'0.72rem', color:'#888', fontFamily:'Heebo' }}>לפי המלצה</label>
-            <select
-              value={filterDecision}
-              onChange={e => setFilterDecision(e.target.value)}
-              style={filterDecision !== 'all' ? activeDropStyle : dropStyle}
-            >
+          <div style={S.filterGroup}>
+            <label style={S.filterLabel}>לפי המלצה</label>
+            <select value={filterDecision} onChange={e=>setFilterDecision(e.target.value)}
+                    style={filterDecision!=='all' ? S.selectActive : S.select}>
               <option value="all">הכל</option>
               <option value="continue">המשך ✅</option>
               <option value="modify">עם שינויים 🔄</option>
@@ -264,14 +354,10 @@ export function AdminScreen({ onBack, active }) {
             </select>
           </div>
 
-          {/* פילטר ציון */}
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <label style={{ fontSize:'0.72rem', color:'#888', fontFamily:'Heebo' }}>לפי ציון כולל</label>
-            <select
-              value={filterColor}
-              onChange={e => setFilterColor(e.target.value)}
-              style={filterColor !== 'all' ? activeDropStyle : dropStyle}
-            >
+          <div style={S.filterGroup}>
+            <label style={S.filterLabel}>לפי ציון כולל</label>
+            <select value={filterColor} onChange={e=>setFilterColor(e.target.value)}
+                    style={filterColor!=='all' ? S.selectActive : S.select}>
               <option value="all">הכל</option>
               <option value="green">🟢 ירוק (80%+)</option>
               <option value="yellow">🟡 צהוב (50–79%)</option>
@@ -280,86 +366,65 @@ export function AdminScreen({ onBack, active }) {
             </select>
           </div>
 
-          {/* פילטר מפקח/ת */}
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <label style={{ fontSize:'0.72rem', color:'#888', fontFamily:'Heebo' }}>לפי מפקח/ת</label>
-            <select
-              value={filterSupervisor}
-              onChange={e => setFilterSupervisor(e.target.value)}
-              style={filterSupervisor !== 'all' ? activeDropStyle : dropStyle}
-            >
+          <div style={S.filterGroup}>
+            <label style={S.filterLabel}>לפי מפקח/ת</label>
+            <select value={filterSupervisor} onChange={e=>setFilterSupervisor(e.target.value)}
+                    style={filterSupervisor!=='all' ? S.selectActive : S.select}>
               <option value="all">כל המפקחים</option>
-              {supervisors.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {supervisors.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* כפתור איפוס */}
           {isFiltered && (
-            <button onClick={resetFilters} style={{
-              marginTop:18, padding:'7px 16px', borderRadius:8, border:'none',
-              background:'#e8f3fd', color:'#1a5a9c', fontFamily:'Heebo',
-              fontSize:'0.8rem', fontWeight:700, cursor:'pointer'
-            }}>
+            <button onClick={resetFilters} style={S.resetBtn}>
               ✕ נקה פילטרים ({entries.length - filtered.length} מוסתרים)
             </button>
           )}
         </div>
-        {/* ══════════════════════════════════════ */}
 
-        {/* ── טבלה ── */}
+        {/* טבלה */}
         {loading ? (
-          <p style={{ textAlign:'center', color:'var(--teal)', padding:30 }}>טוען נתונים...</p>
+          <div style={{ textAlign:'center', padding:40, color:'#888' }}>טוען נתונים...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign:'center', padding:40, color:'#888', fontSize:'0.9rem' }}>
-            <div style={{ fontSize:'2rem', marginBottom:10 }}>🔍</div>
-            {isFiltered ? 'לא נמצאו תוצאות לפי הפילטר הנבחר — נסי לאפס את הפילטרים' : 'אין הגשות עדיין'}
+          <div style={{ textAlign:'center', padding:40, color:'#888', background:'white',
+                        borderRadius:12, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+            <div style={{ fontSize:'2rem', marginBottom:8 }}>🔍</div>
+            {isFiltered
+              ? 'לא נמצאו תוצאות — נסי לאפס את הפילטרים'
+              : 'אין הגשות עדיין'}
           </div>
         ) : (
-          <div style={{ overflowX:'auto' }}>
-            <table className="admin-table">
+          <div style={S.tableWrap}>
+            <table style={S.table}>
               <thead>
                 <tr>
-                  <th>סמל מוסד</th>
-                  <th>בית ספר</th>
-                  <th>מפקח/ת</th>
-                  <th>תוכנית</th>
-                  <th>תחום</th>
-                  <th>שלב א׳</th>
-                  <th>שלב ב׳</th>
-                  <th>שלב ג׳</th>
-                  <th>המלצה</th>
-                  <th>עדכון</th>
-                  <th>דוח</th>
+                  {['סמל מוסד','שם בית ספר','מפקח/ת','שם מנהל/ת','תוכנית','תחום',
+                    'שלב א׳','שלב ב׳','שלב ג׳','המלצה','עדכון','דוח'].map(h => (
+                    <th key={h} style={S.th}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((e, i) => {
-                  const ds = formatDate(e.savedAt);
-                  return (
-                    <tr key={i}>
-                      <td style={{ fontWeight:600 }}>{e.userName||'—'}</td>
-                      <td>{e.userSchool||'—'}</td>
-                      <td style={{ fontSize:'.78rem' }}>{e.userSupervisor||'—'}</td>
-                      <td style={{ fontSize:'.78rem' }}>{e.fields?.['f-prog']||'—'}</td>
-                      <td style={{ fontSize:'.78rem' }}>{e.fields?.['f-domain']||'—'}</td>
-                      <td><span className={`abadge ${bc(e.phase1_pct)}`}>{e.phase1_pct||0}%</span></td>
-                      <td><span className={`abadge ${bc(e.phase2_pct)}`}>{e.phase2_pct||0}%</span></td>
-                      <td><span className={`abadge ${bc(e.phase3_pct)}`}>{e.phase3_pct||0}%</span></td>
-                      <td style={{ fontSize:'.78rem' }}>{dh[e.decision]||'—'}</td>
-                      <td style={{ fontSize:'.74rem', opacity:0.6 }}>{ds}</td>
-                      <td>
-                        <button onClick={() => handlePrint(e)}
-                          style={{ padding:'5px 10px',borderRadius:7,border:'none',background:'#e8f3fd',
-                                   color:'#1a5a9c',fontFamily:'Heebo',fontSize:'0.75rem',
-                                   fontWeight:700,cursor:'pointer' }}>
-                          🖨️ דוח
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filtered.map((e, i) => (
+                  <tr key={i}>
+                    <td style={i%2===0?S.td:S.tdAlt}><strong>{e.userName||'—'}</strong></td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{e.userSchool||'—'}</td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{e.userSupervisor||'—'}</td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{e.userPrincipal||'—'}</td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{e.fields?.['f-prog']||'—'}</td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{e.fields?.['f-domain']||'—'}</td>
+                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase1_pct} /></td>
+                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase2_pct} /></td>
+                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase3_pct} /></td>
+                    <td style={i%2===0?S.td:S.tdAlt}>{dh[e.decision]||'—'}</td>
+                    <td style={{...(i%2===0?S.td:S.tdAlt), fontSize:'0.73rem', color:'#999'}}>
+                      {formatDate(e.savedAt)}
+                    </td>
+                    <td style={i%2===0?S.td:S.tdAlt}>
+                      <button onClick={() => handlePrint(e)} style={S.btnPrint}>🖨️ דוח</button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
