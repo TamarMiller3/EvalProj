@@ -73,12 +73,16 @@ export function AdminScreen({ onBack, active }) {
   const dh = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
   const formatDate = s => s ? new Date(s).toLocaleDateString('he-IL') : '—';
 
-  // ציון → CSS class לטבלה הבהירה
-  function badgeClass(pct) {
-    if (pct == null) return 'badge-none';
-    if (pct >= 80) return 'badge-green';
-    if (pct >= 50) return 'badge-yellow';
-    return 'badge-red';
+  function BadgeCell({ pct }) {
+    if (pct == null) return <span style={{ color: '#bbb' }}>—</span>;
+    const bg = pct >= 80 ? '#d4edda' : pct >= 50 ? '#fff3cd' : '#f8d7da';
+    const cl = pct >= 80 ? '#155724' : pct >= 50 ? '#856404' : '#721c24';
+    return (
+      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 8,
+                     background: bg, color: cl, fontWeight: 700, fontSize: '0.75rem' }}>
+        {pct}%
+      </span>
+    );
   }
 
   function exportXlsx() {
@@ -112,7 +116,8 @@ export function AdminScreen({ onBack, active }) {
   function handlePrint(e) {
     const w = window.open('', '_blank');
     const dLabel = dh[e.decision] || '—';
-    const bClass = v => v >= 80 ? 'bg' : v >= 50 ? 'by' : 'br';
+    const bCl = v => v >= 80 ? '#d4edda' : v >= 50 ? '#fff3cd' : '#f8d7da';
+    const bTx = v => v >= 80 ? '#155724' : v >= 50 ? '#856404' : '#721c24';
     w.document.write(`<!DOCTYPE html><html dir="rtl"><head>
       <meta charset="utf-8"/>
       <title>דוח הערכה — ${e.userSchool||''}</title>
@@ -126,9 +131,6 @@ export function AdminScreen({ onBack, active }) {
         .lbl{color:#888;font-size:12px;min-width:120px}
         .val{font-weight:600}
         .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700}
-        .bg{background:#d4edda;color:#155724}
-        .by{background:#fff3cd;color:#856404}
-        .br{background:#f8d7da;color:#721c24}
         @media print{body{padding:15px}}
       </style>
     </head><body>
@@ -147,9 +149,12 @@ export function AdminScreen({ onBack, active }) {
         <div class="row"><span class="lbl">תחום</span><span class="val">${e.fields?.['f-domain']||'—'}</span></div>
       </div>
       <div class="section"><h2>ציונים לפי שלבים</h2>
-        <div class="row"><span class="lbl">שלב א׳ — טרום</span><span class="badge ${bClass(e.phase1_pct)}">${e.phase1_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ב׳ — מהלך</span><span class="badge ${bClass(e.phase2_pct)}">${e.phase2_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ג׳ — סוף</span><span class="badge ${bClass(e.phase3_pct)}">${e.phase3_pct||0}%</span></div>
+        <div class="row"><span class="lbl">שלב א׳</span>
+          <span class="badge" style="background:${bCl(e.phase1_pct)};color:${bTx(e.phase1_pct)}">${e.phase1_pct||0}%</span></div>
+        <div class="row"><span class="lbl">שלב ב׳</span>
+          <span class="badge" style="background:${bCl(e.phase2_pct)};color:${bTx(e.phase2_pct)}">${e.phase2_pct||0}%</span></div>
+        <div class="row"><span class="lbl">שלב ג׳</span>
+          <span class="badge" style="background:${bCl(e.phase3_pct)};color:${bTx(e.phase3_pct)}">${e.phase3_pct||0}%</span></div>
       </div>
       <div class="section"><h2>החלטה והנמקה</h2>
         <div class="row"><span class="lbl">המלצה</span><span class="val">${dLabel}</span></div>
@@ -163,221 +168,135 @@ export function AdminScreen({ onBack, active }) {
   }
 
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const avgMid = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
-  const avgAll = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
+  const avgMid  = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
+  const avgAll  = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
   const fullCount = filtered.filter(e=>e.phase1_pct>=60).length;
 
-  // ── סגנונות inline לדשבורד הבהיר ──
-  const S = {
-    wrap: {
-      display: 'flex', flexDirection: 'column',
-      width: '100%', height: '100vh',
-      background: '#f0f4f8', fontFamily: 'Heebo, Arial, sans-serif',
-      direction: 'rtl', overflow: 'hidden'
-    },
-    header: {
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '12px 24px', background: '#1a3a5c', flexShrink: 0,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-    },
-    h1: { color: 'white', fontSize: '1rem', fontWeight: 800, margin: 0 },
-    body: {
-      flex: 1, overflowY: 'auto', padding: '20px 24px 40px',
-      WebkitOverflowScrolling: 'touch'
-    },
-    statGrid: {
-      display: 'grid', gridTemplateColumns: 'repeat(4,1fr)',
-      gap: 12, marginBottom: 18
-    },
-    statCard: {
-      background: 'white', borderRadius: 12, padding: '14px 18px',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center'
-    },
-    statVal: { fontSize: '1.6rem', fontWeight: 800, color: '#1a3a5c' },
-    statLbl: { fontSize: '0.75rem', color: '#888', marginTop: 2 },
-    filterBar: {
-      display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap',
-      background: 'white', borderRadius: 12, padding: '14px 18px',
-      marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-      border: '1.5px solid #dde3ee'
-    },
-    filterTitle: { fontSize: '0.82rem', fontWeight: 700, color: '#1a3a5c', alignSelf: 'center', marginLeft: 4 },
-    filterGroup: { display: 'flex', flexDirection: 'column', gap: 3 },
-    filterLabel: { fontSize: '0.71rem', color: '#888' },
-    select: {
-      padding: '7px 12px', borderRadius: 8, border: '1.5px solid #dde3ee',
-      fontFamily: 'Heebo', fontSize: '0.82rem', background: 'white',
-      color: '#1a2233', cursor: 'pointer', outline: 'none', direction: 'rtl',
-      minWidth: 140
-    },
-    selectActive: {
-      padding: '7px 12px', borderRadius: 8, border: '1.5px solid #4a90d9',
-      fontFamily: 'Heebo', fontSize: '0.82rem', background: '#e8f3fd',
-      color: '#1a3a5c', cursor: 'pointer', outline: 'none', direction: 'rtl',
-      fontWeight: 700, minWidth: 140
-    },
-    resetBtn: {
-      padding: '7px 14px', borderRadius: 8, border: 'none',
-      background: '#fde8e8', color: '#9c1a1a', fontFamily: 'Heebo',
-      fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer'
-    },
-    tableWrap: {
-      background: 'white', borderRadius: 12,
-      boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflowX: 'auto'
-    },
-    table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' },
-    th: {
-      background: '#e8f0fa', color: '#1a3a5c', padding: '10px 13px',
-      textAlign: 'right', fontWeight: 700, fontSize: '0.75rem',
-      borderBottom: '2px solid #d0ddf0', whiteSpace: 'nowrap'
-    },
-    td: {
-      padding: '9px 13px', color: '#1a2233',
-      borderBottom: '1px solid #f0f4f8', verticalAlign: 'middle'
-    },
-    tdAlt: {
-      padding: '9px 13px', color: '#1a2233',
-      borderBottom: '1px solid #f0f4f8', verticalAlign: 'middle',
-      background: '#fafbfd'
-    },
-    btnPrint: {
-      padding: '5px 10px', borderRadius: 7, border: 'none',
-      background: '#e8f3fd', color: '#1a5a9c', fontFamily: 'Heebo',
-      fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
-    },
-    btnXlsx: {
-      padding: '9px 18px', borderRadius: 9, fontFamily: 'Heebo',
-      fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
-      border: 'none', background: '#27ae60', color: 'white', whiteSpace: 'nowrap'
-    },
-    btnBack: {
-      padding: '9px 18px', borderRadius: 9, fontFamily: 'Heebo',
-      fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
-      border: 'none', background: 'rgba(255,255,255,0.15)', color: 'white', whiteSpace: 'nowrap'
-    },
-  };
-
-  // badge צבע לטבלה הבהירה
-  function BadgeCell({ pct }) {
-    if (pct == null) return <span style={{ color:'#bbb' }}>—</span>;
-    const bg = pct>=80?'#d4edda':pct>=50?'#fff3cd':'#f8d7da';
-    const cl = pct>=80?'#155724':pct>=50?'#856404':'#721c24';
-    return (
-      <span style={{ display:'inline-block', padding:'2px 10px', borderRadius:8,
-                     background:bg, color:cl, fontWeight:700, fontSize:'0.75rem' }}>
-        {pct}%
-      </span>
-    );
-  }
-
   return (
-    <div style={{ ...S.wrap, display: active ? 'flex' : 'none' }}>
+    // ✅ חזרה ל-className המקורי — App.jsx מנהל את הנראות דרך CSS
+    <div className={`screen admin-screen${active ? ' active' : ''}`}
+         style={{ flexDirection: 'column', background: '#f0f4f8', fontFamily: 'Heebo, Arial, sans-serif' }}>
 
       {/* ── כניסה ── */}
       {!authed && (
-        <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',
-                      backdropFilter:'blur(8px)',zIndex:200,display:'flex',
-                      alignItems:'center',justifyContent:'center' }}>
-          <div style={{ background:'white',borderRadius:20,padding:38,
-                        maxWidth:360,width:'90%',textAlign:'center' }}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)',
+                      backdropFilter:'blur(8px)', zIndex:200, display:'flex',
+                      alignItems:'center', justifyContent:'center' }}>
+          <div style={{ background:'white', borderRadius:20, padding:38,
+                        maxWidth:360, width:'90%', textAlign:'center' }}>
             <div style={{ fontSize:'2.2rem' }}>🔐</div>
-            <h2 style={{ fontSize:'1.25rem',fontWeight:800,color:'#1a3a5c',margin:'10px 0 5px' }}>
+            <h2 style={{ fontSize:'1.25rem', fontWeight:800, color:'#1a3a5c', margin:'10px 0 5px' }}>
               כניסת מנהל מערכת
             </h2>
-            <p style={{ fontSize:'0.81rem',color:'#888',marginBottom:22 }}>הכנס/י את סיסמת המנהל</p>
+            <p style={{ fontSize:'0.81rem', color:'#888', marginBottom:22 }}>הכנס/י את סיסמת המנהל</p>
             <input type="password" autoComplete="new-password" value={pw}
-                   onChange={e=>setPw(e.target.value)}
-                   onKeyDown={e=>e.key==='Enter'&&handleLogin()}
+                   onChange={e => setPw(e.target.value)}
+                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
                    placeholder="סיסמה"
-                   style={{ width:'100%',border:'2px solid #dde3ee',borderRadius:10,
-                            padding:'11px 13px',fontFamily:'Heebo',fontSize:'1rem',
-                            textAlign:'center',letterSpacing:3,background:'#f4f7fb',marginBottom:13 }} />
-            {pwError && <p style={{ color:'#c0392b',fontSize:'0.8rem',marginBottom:10 }}>❌ סיסמה שגויה</p>}
+                   style={{ width:'100%', border:'2px solid #dde3ee', borderRadius:10,
+                            padding:'11px 13px', fontFamily:'Heebo', fontSize:'1rem',
+                            textAlign:'center', letterSpacing:3, background:'#f4f7fb', marginBottom:13 }} />
+            {pwError && <p style={{ color:'#c0392b', fontSize:'0.8rem', marginBottom:10 }}>❌ סיסמה שגויה</p>}
             <button onClick={handleLogin}
-              style={{ width:'100%',padding:'12px',borderRadius:10,border:'none',
-                       background:'#1a3a5c',color:'white',fontFamily:'Heebo',
-                       fontSize:'1rem',fontWeight:700,cursor:'pointer' }}>
+              style={{ width:'100%', padding:12, borderRadius:10, border:'none',
+                       background:'#1a3a5c', color:'white', fontFamily:'Heebo',
+                       fontSize:'1rem', fontWeight:700, cursor:'pointer' }}>
               כניסה
             </button>
             <br/><br/>
             <button onClick={onBack}
-              style={{ background:'none',border:'none',color:'#888',
-                       cursor:'pointer',fontSize:'0.8rem',fontFamily:'Heebo' }}>
+              style={{ background:'none', border:'none', color:'#888',
+                       cursor:'pointer', fontSize:'0.8rem', fontFamily:'Heebo' }}>
               ← חזור
             </button>
           </div>
         </div>
       )}
 
-      {/* ── כותרת ── */}
-      <div style={S.header}>
-        <h1 style={S.h1}>🛡️ מנהל מערכת — כל הנתונים</h1>
+      {/* ── כותרת קבועה ── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                    padding:'12px 24px', background:'#1a3a5c', flexShrink:0,
+                    boxShadow:'0 2px 8px rgba(0,0,0,0.15)' }}>
+        <h1 style={{ color:'white', fontSize:'1rem', fontWeight:800, margin:0 }}>
+          🛡️ מנהל מערכת — כל הנתונים
+        </h1>
         <div style={{ display:'flex', gap:10 }}>
-          <button onClick={exportXlsx} style={S.btnXlsx}>
+          <button onClick={exportXlsx}
+            style={{ padding:'9px 18px', borderRadius:9, fontFamily:'Heebo', fontSize:'0.83rem',
+                     fontWeight:700, cursor:'pointer', border:'none',
+                     background:'#27ae60', color:'white', whiteSpace:'nowrap' }}>
             📥 ייצוא לאקסל{isFiltered ? ` (${filtered.length})` : ''}
           </button>
-          <button onClick={onBack} style={S.btnBack}>← יציאה</button>
+          <button onClick={onBack}
+            style={{ padding:'9px 18px', borderRadius:9, fontFamily:'Heebo', fontSize:'0.83rem',
+                     fontWeight:700, cursor:'pointer', border:'none',
+                     background:'rgba(255,255,255,0.15)', color:'white', whiteSpace:'nowrap' }}>
+            ← יציאה
+          </button>
         </div>
       </div>
 
       {/* ── גוף גלילה ── */}
-      <div style={S.body}>
+      <div style={{ flex:1, overflowY:'auto', padding:'20px 24px 40px',
+                    WebkitOverflowScrolling:'touch' }}>
 
         {/* כרטיסי סטטיסטיקה */}
-        <div style={S.statGrid}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+                      gap:12, marginBottom:18 }}>
           {[
-            { v: filtered.length,                              l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
-            { v: fullCount,                                    l: 'הגשות מלאות' },
-            { v: avgMid != null ? avgMid + '%' : '—',         l: 'ממוצע מהלך' },
-            { v: avgAll != null ? avgAll + '%' : '—',         l: 'ממוצע כללי' },
+            { v: filtered.length,                        l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
+            { v: fullCount,                              l: 'הגשות מלאות' },
+            { v: avgMid != null ? avgMid + '%' : '—',   l: 'ממוצע מהלך' },
+            { v: avgAll != null ? avgAll + '%' : '—',   l: 'ממוצע כללי' },
           ].map(({ v, l }) => (
-            <div key={l} style={S.statCard}>
-              <div style={S.statVal}>{v ?? '—'}</div>
-              <div style={S.statLbl}>{l}</div>
+            <div key={l} style={{ background:'white', borderRadius:12, padding:'14px 18px',
+                                  boxShadow:'0 1px 4px rgba(0,0,0,0.08)', textAlign:'center' }}>
+              <div style={{ fontSize:'1.6rem', fontWeight:800, color:'#1a3a5c' }}>{v ?? '—'}</div>
+              <div style={{ fontSize:'0.75rem', color:'#888', marginTop:2 }}>{l}</div>
             </div>
           ))}
         </div>
 
         {/* שורת פילטרים */}
-        <div style={S.filterBar}>
-          <span style={S.filterTitle}>🔽 סינון:</span>
+        <div style={{ display:'flex', gap:12, alignItems:'flex-end', flexWrap:'wrap',
+                      background:'white', borderRadius:12, padding:'14px 18px',
+                      marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.07)',
+                      border:'1.5px solid #dde3ee' }}>
+          <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1a3a5c', alignSelf:'center' }}>
+            🔽 סינון:
+          </span>
 
-          <div style={S.filterGroup}>
-            <label style={S.filterLabel}>לפי המלצה</label>
-            <select value={filterDecision} onChange={e=>setFilterDecision(e.target.value)}
-                    style={filterDecision!=='all' ? S.selectActive : S.select}>
-              <option value="all">הכל</option>
-              <option value="continue">המשך ✅</option>
-              <option value="modify">עם שינויים 🔄</option>
-              <option value="replace">להחליף ⚠️</option>
-              <option value="stop">לא להמשיך ❌</option>
-            </select>
-          </div>
-
-          <div style={S.filterGroup}>
-            <label style={S.filterLabel}>לפי ציון כולל</label>
-            <select value={filterColor} onChange={e=>setFilterColor(e.target.value)}
-                    style={filterColor!=='all' ? S.selectActive : S.select}>
-              <option value="all">הכל</option>
-              <option value="green">🟢 ירוק (80%+)</option>
-              <option value="yellow">🟡 צהוב (50–79%)</option>
-              <option value="red">🔴 אדום (עד 49%)</option>
-              <option value="none">⚪ אין ציון</option>
-            </select>
-          </div>
-
-          <div style={S.filterGroup}>
-            <label style={S.filterLabel}>לפי מפקח/ת</label>
-            <select value={filterSupervisor} onChange={e=>setFilterSupervisor(e.target.value)}
-                    style={filterSupervisor!=='all' ? S.selectActive : S.select}>
-              <option value="all">כל המפקחים</option>
-              {supervisors.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
+          {[
+            { label:'לפי המלצה', val:filterDecision, set:setFilterDecision,
+              opts:[['all','הכל'],['continue','המשך ✅'],['modify','עם שינויים 🔄'],
+                    ['replace','להחליף ⚠️'],['stop','לא להמשיך ❌']] },
+            { label:'לפי ציון כולל', val:filterColor, set:setFilterColor,
+              opts:[['all','הכל'],['green','🟢 ירוק (80%+)'],['yellow','🟡 צהוב (50–79%)'],
+                    ['red','🔴 אדום (עד 49%)'],['none','⚪ אין ציון']] },
+            { label:'לפי מפקח/ת', val:filterSupervisor, set:setFilterSupervisor,
+              opts:[['all','כל המפקחים'], ...supervisors.map(s=>[s,s])] },
+          ].map(({ label, val, set, opts }) => (
+            <div key={label} style={{ display:'flex', flexDirection:'column', gap:3 }}>
+              <label style={{ fontSize:'0.71rem', color:'#888' }}>{label}</label>
+              <select value={val} onChange={e => set(e.target.value)}
+                style={{ padding:'7px 12px', borderRadius:8, fontFamily:'Heebo',
+                         fontSize:'0.82rem', cursor:'pointer', outline:'none',
+                         direction:'rtl', minWidth:150,
+                         border: val !== 'all' ? '1.5px solid #4a90d9' : '1.5px solid #dde3ee',
+                         background: val !== 'all' ? '#e8f3fd' : 'white',
+                         color: val !== 'all' ? '#1a3a5c' : '#1a2233',
+                         fontWeight: val !== 'all' ? 700 : 400 }}>
+                {opts.map(([v,t]) => <option key={v} value={v}>{t}</option>)}
+              </select>
+            </div>
+          ))}
 
           {isFiltered && (
-            <button onClick={resetFilters} style={S.resetBtn}>
-              ✕ נקה פילטרים ({entries.length - filtered.length} מוסתרים)
+            <button onClick={resetFilters}
+              style={{ alignSelf:'flex-end', padding:'7px 14px', borderRadius:8, border:'none',
+                       background:'#fde8e8', color:'#9c1a1a', fontFamily:'Heebo',
+                       fontSize:'0.78rem', fontWeight:700, cursor:'pointer' }}>
+              ✕ נקה ({entries.length - filtered.length} מוסתרים)
             </button>
           )}
         </div>
@@ -386,45 +305,62 @@ export function AdminScreen({ onBack, active }) {
         {loading ? (
           <div style={{ textAlign:'center', padding:40, color:'#888' }}>טוען נתונים...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign:'center', padding:40, color:'#888', background:'white',
-                        borderRadius:12, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+          <div style={{ textAlign:'center', padding:40, color:'#888',
+                        background:'white', borderRadius:12 }}>
             <div style={{ fontSize:'2rem', marginBottom:8 }}>🔍</div>
-            {isFiltered
-              ? 'לא נמצאו תוצאות — נסי לאפס את הפילטרים'
-              : 'אין הגשות עדיין'}
+            {isFiltered ? 'לא נמצאו תוצאות — נסי לאפס את הפילטרים' : 'אין הגשות עדיין'}
           </div>
         ) : (
-          <div style={S.tableWrap}>
-            <table style={S.table}>
+          <div style={{ background:'white', borderRadius:12,
+                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)', overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
               <thead>
                 <tr>
-                  {['סמל מוסד','שם בית ספר','מפקח/ת','שם מנהל/ת','תוכנית','תחום',
-                    'שלב א׳','שלב ב׳','שלב ג׳','המלצה','עדכון','דוח'].map(h => (
-                    <th key={h} style={S.th}>{h}</th>
+                  {['סמל מוסד','שם בית ספר','מפקח/ת','שם מנהל/ת','תוכנית',
+                    'תחום','שלב א׳','שלב ב׳','שלב ג׳','המלצה','עדכון','דוח'].map(h => (
+                    <th key={h} style={{ background:'#e8f0fa', color:'#1a3a5c',
+                                        padding:'10px 13px', textAlign:'right',
+                                        fontWeight:700, fontSize:'0.75rem',
+                                        borderBottom:'2px solid #d0ddf0',
+                                        whiteSpace:'nowrap' }}>
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((e, i) => (
-                  <tr key={i}>
-                    <td style={i%2===0?S.td:S.tdAlt}><strong>{e.userName||'—'}</strong></td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{e.userSchool||'—'}</td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{e.userSupervisor||'—'}</td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{e.userPrincipal||'—'}</td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{e.fields?.['f-prog']||'—'}</td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{e.fields?.['f-domain']||'—'}</td>
-                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase1_pct} /></td>
-                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase2_pct} /></td>
-                    <td style={i%2===0?S.td:S.tdAlt}><BadgeCell pct={e.phase3_pct} /></td>
-                    <td style={i%2===0?S.td:S.tdAlt}>{dh[e.decision]||'—'}</td>
-                    <td style={{...(i%2===0?S.td:S.tdAlt), fontSize:'0.73rem', color:'#999'}}>
-                      {formatDate(e.savedAt)}
-                    </td>
-                    <td style={i%2===0?S.td:S.tdAlt}>
-                      <button onClick={() => handlePrint(e)} style={S.btnPrint}>🖨️ דוח</button>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((e, i) => {
+                  const tdStyle = {
+                    padding:'9px 13px', color:'#1a2233',
+                    borderBottom:'1px solid #f0f4f8', verticalAlign:'middle',
+                    background: i % 2 === 0 ? 'white' : '#fafbfd'
+                  };
+                  return (
+                    <tr key={i}>
+                      <td style={tdStyle}><strong>{e.userName||'—'}</strong></td>
+                      <td style={tdStyle}>{e.userSchool||'—'}</td>
+                      <td style={tdStyle}>{e.userSupervisor||'—'}</td>
+                      <td style={tdStyle}>{e.userPrincipal||'—'}</td>
+                      <td style={tdStyle}>{e.fields?.['f-prog']||'—'}</td>
+                      <td style={tdStyle}>{e.fields?.['f-domain']||'—'}</td>
+                      <td style={tdStyle}><BadgeCell pct={e.phase1_pct} /></td>
+                      <td style={tdStyle}><BadgeCell pct={e.phase2_pct} /></td>
+                      <td style={tdStyle}><BadgeCell pct={e.phase3_pct} /></td>
+                      <td style={tdStyle}>{dh[e.decision]||'—'}</td>
+                      <td style={{ ...tdStyle, fontSize:'0.73rem', color:'#999' }}>
+                        {formatDate(e.savedAt)}
+                      </td>
+                      <td style={tdStyle}>
+                        <button onClick={() => handlePrint(e)}
+                          style={{ padding:'5px 10px', borderRadius:7, border:'none',
+                                   background:'#e8f3fd', color:'#1a5a9c', fontFamily:'Heebo',
+                                   fontSize:'0.74rem', fontWeight:700, cursor:'pointer' }}>
+                          🖨️ דוח
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
