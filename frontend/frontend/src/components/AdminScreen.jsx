@@ -13,6 +13,8 @@ export function AdminScreen({ onBack, active }) {
   const [filterDecision,   setFilterDecision]   = useState('all');
   const [filterColor,      setFilterColor]      = useState('all');
   const [filterSupervisor, setFilterSupervisor] = useState('all');
+  const [filterSchool,     setFilterSchool]     = useState('');
+  const [filterSymbol,     setFilterSymbol]     = useState('');
 
   async function handleLogin() {
     try {
@@ -58,17 +60,23 @@ export function AdminScreen({ onBack, active }) {
       if (filterDecision   !== 'all' && e.decision       !== filterDecision)   return false;
       if (filterColor      !== 'all' && rowColor(e)      !== filterColor)      return false;
       if (filterSupervisor !== 'all' && e.userSupervisor !== filterSupervisor) return false;
+      if (filterSchool.trim() && !(e.userSchool||'').includes(filterSchool.trim())) return false;
+      if (filterSymbol.trim() && !(e.userName||'').includes(filterSymbol.trim()))   return false;
       return true;
     });
-  }, [entries, filterDecision, filterColor, filterSupervisor]);
+  }, [entries, filterDecision, filterColor, filterSupervisor, filterSchool, filterSymbol]);
 
   function resetFilters() {
     setFilterDecision('all');
     setFilterColor('all');
     setFilterSupervisor('all');
+    setFilterSchool('');
+    setFilterSymbol('');
   }
 
-  const isFiltered = filterDecision !== 'all' || filterColor !== 'all' || filterSupervisor !== 'all';
+  const isFiltered = filterDecision !== 'all' || filterColor !== 'all' ||
+                     filterSupervisor !== 'all' || filterSchool.trim() !== '' ||
+                     filterSymbol.trim() !== '';
 
   const dh = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
   const formatDate = s => s ? new Date(s).toLocaleDateString('he-IL') : '—';
@@ -78,8 +86,8 @@ export function AdminScreen({ onBack, active }) {
     const bg = pct >= 80 ? '#d4edda' : pct >= 50 ? '#fff3cd' : '#f8d7da';
     const cl = pct >= 80 ? '#155724' : pct >= 50 ? '#856404' : '#721c24';
     return (
-      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 8,
-                     background: bg, color: cl, fontWeight: 700, fontSize: '0.75rem' }}>
+      <span style={{ display:'inline-block', padding:'2px 10px', borderRadius:8,
+                     background:bg, color:cl, fontWeight:700, fontSize:'0.75rem' }}>
         {pct}%
       </span>
     );
@@ -168,14 +176,23 @@ export function AdminScreen({ onBack, active }) {
   }
 
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const avgMid  = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
-  const avgAll  = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
+  const avgMid   = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
+  const avgAll   = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
   const fullCount = filtered.filter(e=>e.phase1_pct>=60).length;
 
+  // סגנון משותף לשדות חיפוש טקסט
+  const inputStyle = active => ({
+    padding: '7px 12px', borderRadius: 8, fontFamily: 'Heebo',
+    fontSize: '0.82rem', outline: 'none', direction: 'rtl', width: 150,
+    border: active ? '1.5px solid #4a90d9' : '1.5px solid #dde3ee',
+    background: active ? '#e8f3fd' : 'white',
+    color: '#1a2233'
+  });
+
   return (
-    // ✅ חזרה ל-className המקורי — App.jsx מנהל את הנראות דרך CSS
     <div className={`screen admin-screen${active ? ' active' : ''}`}
-         style={{ flexDirection: 'column', background: '#f0f4f8', fontFamily: 'Heebo, Arial, sans-serif' }}>
+         style={{ flexDirection:'column', background:'#f0f4f8',
+                  fontFamily:'Heebo, Arial, sans-serif' }}>
 
       {/* ── כניסה ── */}
       {!authed && (
@@ -213,7 +230,7 @@ export function AdminScreen({ onBack, active }) {
         </div>
       )}
 
-      {/* ── כותרת קבועה ── */}
+      {/* ── כותרת ── */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
                     padding:'12px 24px', background:'#1a3a5c', flexShrink:0,
                     boxShadow:'0 2px 8px rgba(0,0,0,0.15)' }}>
@@ -241,13 +258,12 @@ export function AdminScreen({ onBack, active }) {
                     WebkitOverflowScrolling:'touch' }}>
 
         {/* כרטיסי סטטיסטיקה */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)',
-                      gap:12, marginBottom:18 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
           {[
-            { v: filtered.length,                        l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
-            { v: fullCount,                              l: 'הגשות מלאות' },
-            { v: avgMid != null ? avgMid + '%' : '—',   l: 'ממוצע מהלך' },
-            { v: avgAll != null ? avgAll + '%' : '—',   l: 'ממוצע כללי' },
+            { v: filtered.length,                       l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
+            { v: fullCount,                             l: 'הגשות מלאות' },
+            { v: avgMid != null ? avgMid + '%' : '—',  l: 'ממוצע מהלך' },
+            { v: avgAll != null ? avgAll + '%' : '—',  l: 'ממוצע כללי' },
           ].map(({ v, l }) => (
             <div key={l} style={{ background:'white', borderRadius:12, padding:'14px 18px',
                                   boxShadow:'0 1px 4px rgba(0,0,0,0.08)', textAlign:'center' }}>
@@ -257,7 +273,7 @@ export function AdminScreen({ onBack, active }) {
           ))}
         </div>
 
-        {/* שורת פילטרים */}
+        {/* ── שורת פילטרים ── */}
         <div style={{ display:'flex', gap:12, alignItems:'flex-end', flexWrap:'wrap',
                       background:'white', borderRadius:12, padding:'14px 18px',
                       marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.07)',
@@ -266,6 +282,7 @@ export function AdminScreen({ onBack, active }) {
             🔽 סינון:
           </span>
 
+          {/* Dropdowns */}
           {[
             { label:'לפי המלצה', val:filterDecision, set:setFilterDecision,
               opts:[['all','הכל'],['continue','המשך ✅'],['modify','עם שינויים 🔄'],
@@ -291,6 +308,31 @@ export function AdminScreen({ onBack, active }) {
             </div>
           ))}
 
+          {/* חיפוש שם בית ספר */}
+          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+            <label style={{ fontSize:'0.71rem', color:'#888' }}>חיפוש שם בית ספר</label>
+            <input
+              type="text"
+              placeholder="הקלידי שם..."
+              value={filterSchool}
+              onChange={e => setFilterSchool(e.target.value)}
+              style={inputStyle(filterSchool.trim() !== '')}
+            />
+          </div>
+
+          {/* חיפוש סמל מוסד */}
+          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+            <label style={{ fontSize:'0.71rem', color:'#888' }}>חיפוש סמל מוסד</label>
+            <input
+              type="text"
+              placeholder="הקלידי סמל..."
+              value={filterSymbol}
+              onChange={e => setFilterSymbol(e.target.value)}
+              style={inputStyle(filterSymbol.trim() !== '')}
+            />
+          </div>
+
+          {/* כפתור איפוס */}
           {isFiltered && (
             <button onClick={resetFilters}
               style={{ alignSelf:'flex-end', padding:'7px 14px', borderRadius:8, border:'none',
@@ -301,7 +343,7 @@ export function AdminScreen({ onBack, active }) {
           )}
         </div>
 
-        {/* טבלה */}
+        {/* ── טבלה ── */}
         {loading ? (
           <div style={{ textAlign:'center', padding:40, color:'#888' }}>טוען נתונים...</div>
         ) : filtered.length === 0 ? (
