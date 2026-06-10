@@ -75,5 +75,17 @@ router.put('/:code', async (req, res) => {
         return res.status(500).json({ error: e.message });
     }
 });
+// ✅ delete
+router.delete('/:code', async (req, res) => {
+    try {
+        const adminPw = req.headers['x-admin-password'];
+        if (adminPw !== process.env.ADMIN_PASSWORD)
+            return res.status(401).json({ error: 'Unauthorized' });
+        await store.delete(req.params.code);
+        return res.json({ success: true });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
 
 module.exports = router;
