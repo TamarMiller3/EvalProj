@@ -56,8 +56,9 @@ export const TARGET_OPTIONS = [
 { group: 'צוות', options: [
     'צוות חינוכי','צוות הוראה','הנהלה'
   ]}
+];
 
-export const SENIORITY_OPTIONS = [
+export const SENIORITY_OPTIONS =
   'שנה ראשונה','שנה שנייה','שנה שלישית','4 שנים ומעלה'
 ];
 
