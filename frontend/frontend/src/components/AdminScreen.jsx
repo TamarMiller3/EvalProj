@@ -1,20 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { api } from '../api';
 import { generateInsights } from '../constants/scoreCalc';
 
 export function AdminScreen({ onBack, active }) {
-  const [authed, setAuthed]     = useState(false);
-  const [pw, setPw]             = useState('');
-  const [pwError, setPwError]   = useState(false);
-  const [entries, setEntries]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-
-  const [filterDecision,   setFilterDecision]   = useState('all');
-  const [filterColor,      setFilterColor]      = useState('all');
-  const [filterSupervisor, setFilterSupervisor] = useState('all');
-  const [filterSchool,     setFilterSchool]     = useState('');
-  const [filterSymbol,     setFilterSymbol]     = useState('');
+  const [authed, setAuthed]         = useState(false);
+  const [pw, setPw]                 = useState('');
+  const [pwError, setPwError]       = useState(false);
+  const [entries, setEntries]       = useState([]);
+  const [loading, setLoading]       = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { code, name }
+  const [deleting, setDeleting]     = useState(false);
 
   async function handleLogin() {
     try {
@@ -37,376 +33,335 @@ export function AdminScreen({ onBack, active }) {
     }
   }
 
-  function colorOf(pct) {
-    if (pct == null) return 'none';
-    if (pct >= 80) return 'green';
-    if (pct >= 50) return 'yellow';
-    return 'red';
-  }
-
-  function rowColor(e) {
-    const vals = [e.phase1_pct, e.phase2_pct, e.phase3_pct].filter(v => v != null);
-    if (!vals.length) return 'none';
-    return colorOf(Math.min(...vals));
-  }
-
-  const supervisors = useMemo(() => {
-    const s = new Set(entries.map(e => e.userSupervisor).filter(Boolean));
-    return [...s].sort();
-  }, [entries]);
-
-  const filtered = useMemo(() => {
-    return entries.filter(e => {
-      if (filterDecision   !== 'all' && e.decision       !== filterDecision)   return false;
-      if (filterColor      !== 'all' && rowColor(e)      !== filterColor)      return false;
-      if (filterSupervisor !== 'all' && e.userSupervisor !== filterSupervisor) return false;
-      if (filterSchool.trim() && !(e.userSchool||'').includes(filterSchool.trim())) return false;
-      if (filterSymbol.trim() && !(e.userName||'').includes(filterSymbol.trim()))   return false;
-      return true;
-    });
-  }, [entries, filterDecision, filterColor, filterSupervisor, filterSchool, filterSymbol]);
-
-  function resetFilters() {
-    setFilterDecision('all');
-    setFilterColor('all');
-    setFilterSupervisor('all');
-    setFilterSchool('');
-    setFilterSymbol('');
-  }
-
-  const isFiltered = filterDecision !== 'all' || filterColor !== 'all' ||
-                     filterSupervisor !== 'all' || filterSchool.trim() !== '' ||
-                     filterSymbol.trim() !== '';
-
-  const dh = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
-  const formatDate = s => s ? new Date(s).toLocaleDateString('he-IL') : '—';
-
-  function BadgeCell({ pct }) {
-    if (pct == null) return <span style={{ color: '#bbb' }}>—</span>;
-    const bg = pct >= 80 ? '#d4edda' : pct >= 50 ? '#fff3cd' : '#f8d7da';
-    const cl = pct >= 80 ? '#155724' : pct >= 50 ? '#856404' : '#721c24';
-    return (
-      <span style={{ display:'inline-block', padding:'2px 10px', borderRadius:8,
-                     background:bg, color:cl, fontWeight:700, fontSize:'0.75rem' }}>
-        {pct}%
-      </span>
-    );
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+    try {
+      await api.deleteEvaluation(deleteConfirm.code, pw);
+      setEntries(prev => prev.filter(e => e.userCode !== deleteConfirm.code));
+      setDeleteConfirm(null);
+    } catch (e) {
+      alert('שגיאה במחיקה: ' + e.message);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function exportXlsx() {
-    if (!filtered.length) return;
+    if (!entries.length) return;
+    const dh = { continue: 'להמשיך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
     const H = [
-      'סמל מוסד','שם בית ספר','שם מנהל/ת','שם מפקח/ת','קוד',
-      'שם תוכנית','שנת לימודים','קהל יעד','תחום','יעד',
-      'שלב א׳ %','שלב ב׳ %','שלב ג׳ %',
-      'החלטה','הנמקה','הערות סיכום',
-      'תובנות אוטומטיות','דרכי פעולה מומלצות','דרכי שיפור נתונים','תאריך עדכון'
+      'סמל מוסד', 'שם בית ספר', 'שם מנהל/ת', 'שם מפקח/ת', 'קוד',
+      'שם תוכנית', 'שנת לימודים', 'קהל יעד', 'תחום', 'יעד',
+      'שלב א׳ %', 'שלב ב׳ %', 'שלב ג׳ %',
+      'החלטה', 'הנמקה', 'הערות סיכום',
+      'תובנות אוטומטיות', 'דרכי פעולה מומלצות', 'דרכי שיפור נתונים',
+      'תאריך עדכון'
     ];
-    const rows = filtered.map(e => {
-      const scores = [e.phase1_pct||0, e.phase2_pct||0, e.phase3_pct||0, 0];
+    const rows = entries.map(e => {
+      const scores = [e.phase1_pct || 0, e.phase2_pct || 0, e.phase3_pct || 0, 0];
       const { insights, actions, dataRecs } = generateInsights(e, scores);
       return [
-        e.userName||'', e.userSchool||'', e.userPrincipal||'', e.userSupervisor||'', e.userCode||'',
-        e.fields?.['f-prog']||'', e.fields?.['f-year']||'',
-        e.fields?.['f-target']||'', e.fields?.['f-domain']||'', e.fields?.['f-goal']||'',
-        e.phase1_pct||0, e.phase2_pct||0, e.phase3_pct||0,
-        dh[e.decision]||'', e.decision_reason||'', e.summary_notes||'',
-        insights?.join(' | ')||'', actions?.join(' | ')||'', dataRecs?.join(' | ')||'',
-        formatDate(e.savedAt)
+        e.userName || '', e.userSchool || '', e.userPrincipal || '', e.userSupervisor || '', e.userCode || '',
+        e.fields?.['f-prog'] || '', e.fields?.['f-year'] || '',
+        e.fields?.['f-target'] || '', e.fields?.['f-domain'] || '', e.fields?.['f-area'] || '',
+        (e.phase1_pct || 0) + '%', (e.phase2_pct || 0) + '%', (e.phase3_pct || 0) + '%',
+        dh[e.decision] || '', e.notes?.n12 || '', e.notes?.n13 || '',
+        insights.join(' | '), actions.join(' | '), dataRecs.join(' | '),
+        new Date(e.savedAt).toLocaleString('he-IL')
       ];
     });
     const ws = XLSX.utils.aoa_to_sheet([H, ...rows]);
+    ws['!cols'] = [
+      {wch:12},{wch:20},{wch:16},{wch:16},{wch:12},
+      {wch:22},{wch:12},{wch:20},{wch:16},{wch:16},
+      {wch:10},{wch:10},{wch:10},
+      {wch:14},{wch:40},{wch:40},
+      {wch:50},{wch:50},{wch:50},{wch:18}
+    ];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'הערכות');
-    XLSX.writeFile(wb, 'kalanit_export.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'נתונים');
+    XLSX.writeFile(wb, `RAMA_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`);
   }
 
-  function handlePrint(e) {
+  function printEntry(e) {
+    const sc = e.scales || {};
+    const ch = e.checks || {};
+    const scores = [e.phase1_pct || 0, e.phase2_pct || 0, e.phase3_pct || 0, 0];
+    const { insights, actions, dataRecs } = generateInsights(e, scores);
+
+    const chkBox = id => ch[id]
+      ? `<span style="color:#0d7c66;font-weight:bold;font-size:14px">✓</span>`
+      : `<span style="color:#ccc;font-size:14px">☐</span>`;
+
+    const scaleBtn = (key) => {
+      const v = sc[key];
+      if (!v) return `<span style="color:#ccc;font-size:11px">לא נבחר</span>`;
+      const colors = ['','#e74c3c','#e67e22','#f1c40f','#27ae60'];
+      const textColors = ['','white','white','#5a4200','white'];
+      return `<span style="background:${colors[v]};color:${textColors[v]};padding:3px 12px;border-radius:5px;font-weight:700;font-size:12px">${v}</span>`;
+    };
+
+    const noteBox = (text, placeholder) =>
+      `<div style="background:#f8fafc;border:1px solid #e0e6ed;border-radius:6px;padding:8px 12px;font-size:12px;${text ? 'white-space:pre-wrap' : 'color:#bbb'};margin-top:4px;min-height:32px">${text || placeholder}</div>`;
+
+    const ciRow = (id, label) =>
+      `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed #e0e6ed;font-size:12px">
+        <span style="flex-shrink:0;margin-top:1px">${chkBox(id)}</span><span>${label}</span></div>`;
+
+    const scaleRow = (key, label, sub) =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed #e0e6ed">
+        <div style="flex:1;font-size:12px;line-height:1.5">${label}${sub ? `<div style="font-size:10px;color:#6b7280;margin-top:2px">${sub}</div>` : ''}</div>
+        <div style="flex-shrink:0">${scaleBtn(key)}</div>
+      </div>`;
+
+    const card = (title, desc, content) =>
+      `<div style="background:white;border-radius:12px;box-shadow:0 2px 10px rgba(26,39,68,0.08);margin-bottom:14px;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;">
+          <div style="font-weight:700;font-size:13px;color:#1a2744">${title}</div>
+          ${desc ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${desc}</div>` : ''}
+        </div>
+        <div style="padding:10px 16px 14px">${content}</div>
+      </div>`;
+
+    const banner = (bg, border, title, sub) =>
+      `<div style="border-radius:10px;padding:14px 18px;margin-bottom:16px;background:${bg};border-right:4px solid ${border}">
+        <div style="font-size:14px;font-weight:700;color:#1a2744">${title}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:3px">${sub}</div>
+      </div>`;
+
+    const progressBar = (label, pct) =>
+      `<div style="background:white;border-radius:8px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(26,39,68,0.07)">
+        <div style="font-size:11px;font-weight:700;color:#1a2744;white-space:nowrap">${label}</div>
+        <div style="flex:1;height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#0d7c66,#4fc3a1);border-radius:4px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:#0d7c66;white-space:nowrap">${pct}%</div>
+      </div>`;
+
+    const legend = (labels) => {
+      const l = labels || ['לא מתקיים','חלקי','מספק','מצוין'];
+      const colors = ['#e74c3c','#e67e22','#f1c40f','#27ae60'];
+      return `<div style="display:flex;gap:14px;background:#f3f4f6;border-radius:7px;padding:8px 12px;margin-bottom:12px;flex-wrap:wrap">
+        ${l.map((t,i) => `<div style="display:flex;align-items:center;gap:5px;font-size:11px">
+          <div style="width:10px;height:10px;border-radius:3px;background:${colors[i]}"></div>${i+1} = ${t}</div>`).join('')}
+      </div>`;
+    };
+
+    const decMap = { continue: 'לשמר את הקיים', modify: 'להמשיך עם שינויים', replace: 'להחליף בתוכנית אחרת', stop: 'לא להמשיך' };
+
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8">
+<title>דוח הערכת תוכנית — ${e.fields?.['f-prog'] || ''}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;direction:rtl;background:#edf0f7;color:#1e293b}
+  .page{max-width:820px;margin:0 auto;padding:20px}
+  .pb{page-break-before:always}
+  @media print{body{background:white}.page{padding:8px}}
+</style>
+</head>
+<body><div class="page">
+<div style="background:#1a2744;color:white;border-radius:12px;padding:14px 20px;margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:15px;font-weight:800">הערכת תוכניות חינוכיות</div>
+    <div style="font-size:11px;opacity:0.65">${e.userName || ''} | ${e.userSchool || ''}</div>
+  </div>
+  <div style="background:rgba(255,255,255,0.08);padding:6px 0;font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px">
+    ${[e.fields?.['f-prog'],e.userSchool,e.fields?.['f-year'],e.fields?.['f-domain'],e.fields?.['f-target']].filter(Boolean).join(' | ')}
+  </div>
+</div>
+${banner('#e8eef8','#1a2744','שלב א׳ — טרום תוכנית','מיפוי צרכים, בחירת תוכנית, תכנון מערך ההערכה')}
+${card('פרטי התוכנית','',`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  ${[['שם התוכנית',e.fields?.['f-prog']],['שנת לימודים',e.fields?.['f-year']],['סמל מוסד',e.userName],['שם בית הספר',e.userSchool],['שם מנהל/ת',e.userPrincipal],['שם מפקח/ת',e.userSupervisor],['וותק',e.fields?.['f-seniority']],['קהל יעד',e.fields?.['f-target']],['יעד',e.fields?.['f-domain']],['תחום',e.fields?.['f-area']],['תלמידים',e.fields?.['f-num']],['אנשי צוות',e.fields?.['f-contact']]].map(([l,v])=>`
+  <div style="background:#f8fafc;border:1px solid #e0e6ed;border-radius:6px;padding:7px 10px">
+    <div style="font-size:10px;color:#6b7280;margin-bottom:2px">${l}</div>
+    <div style="font-weight:700;font-size:12px">${v||'—'}</div>
+  </div>`).join('')}
+</div>`)}
+${progressBar('התקדמות שלב א׳', scores[0])}
+${card('מיפוי צרכים בית-ספרי','זיהוי הצורך המרכזי',
+  ['c1','c2','c3','c4','c5'].map((c,i)=>ciRow(c,['הושלם תהליך מיפוי תמונת מצב בית ספרית','אותרו צרכים בית ספריים לקידום','הצורך התבסס על נתונים פנימיים וחיצוניים','צוות הניהול היה שותף לזיהוי הצורך ואישר את הבחירה','הושלם סטטוס של אוכלוסיית היעד לקראת הפעלת התוכנית'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הצורך המרכזי שזוהה:</div>${noteBox(e.notes?.n1,'')}`
+)}
+${card('בחירת התוכנית והלימה לצורך','',
+  ['c19','c6','c7','c8'].map((c,i)=>ciRow(c,['הלימה בין מטרות התוכנית לצורך הבית-ספרי','נבדקו תוכניות חלופיות לפני הבחירה הסופית','קיבלנו המלצות מבתי ספר אחרים שהפעילו את התוכנית','אין חפיפה עם תוכנית קיימת אחרת בבית הספר'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">הסבר על ההלימה:</div>${noteBox(e.notes?.n2,'')}`
+)}
+${card('משאבים ותשתית','',
+  ['c9','c10','c11','c12','c13'].map((c,i)=>ciRow(c,['שעות להפעלת התוכנית מעוגנות במערכת הבית ספרית','הותאמו תשתיות הנדרשות ליישום התוכנית','הוגדר אחראי מטעם בית הספר והוגדרו תחומי אחריותו','הוגדר קהל היעד — מספר תלמידים ומאפיינים','הוגדר משאב תקציבי ואושר על ידי מפקחת בית הספר'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">פרטי משאבים:</div>${noteBox(e.notes?.n3,'')}`
+)}
+${card('מדדי הערכה וצמתי מעקב','',
+  ['c14','c15','c16','c17','c18'].map((c,i)=>ciRow(c,['נקבעו מדדי סדירות: מספר מפגשים, אחוז נוכחות','נקבעו מדדי תפוקה: שיפור הישגים / רגשי / חברתי','נבחרו כלי הערכה ספציפיים (שאלון, מבחן, ראיון, תצפית)','נקבעו צמתי הערכה בלוח השנה','נקבע יעד ספציפי ומדיד להגדרת ההצלחה'][i])).join('')+
+  `<div style="font-size:10px;color:#6b7280;margin-top:8px">פירוט מדדים ויעדים:</div>${noteBox(e.notes?.n4,'')}`
+)}
+<div class="pb"></div>
+${banner('#e8f5f2','#0d7c66','שלב ב׳ — במהלך התוכנית','מעקב שוטף ומדידת ביניים')}
+${progressBar('התקדמות שלב ב׳', scores[1])}
+${card('סדירות וכמות','',legend()+scaleRow('reg1','המפגשים התקיימו באופן סדיר','מעל 80%=מצוין | 60–80%=מספק | מתחת 60%=בעייתי')+scaleRow('reg2','כל קהל היעד השתתף בכל המפגשים','')+`<div style="font-size:10px;color:#6b7280;margin-top:8px">הערות:</div>${noteBox(e.notes?.n5,'')}`)}
+${card('איכות הביצוע','',legend()+scaleRow('qu1','תכנון המפגשים','')+scaleRow('qu2','התאמת המנחה לרציונל התוכנית','')+scaleRow('qu3','מטרות התוכנית מיושמות','')+scaleRow('qu4','מידת שביעות רצון התלמידים גבוהה','')+scaleRow('qu5','המורים המעורבים בתוכנית מביעים שביעות רצון גבוהה','')+`<div style="font-size:10px;color:#6b7280;margin-top:8px">הערות:</div>${noteBox(e.notes?.n6,'')}`)}
+${card('סימני התקדמות','',legend()+scaleRow('pr1','קיימות עדויות לשינוי המצביעות על שיפור בתחום הנבחר','')+scaleRow('pr2','תשתיות ומשאבים מספיקים להמשך הפעלת התוכנית','')+`<div style="font-size:10px;color:#6b7280;margin-top:8px">עדויות לשינוי:</div>${noteBox(e.notes?.n7,'')}`)}
+<div class="pb"></div>
+${banner('#fef3e2','#e67e22','שלב ג׳ — הערכת סוף תוכנית','הערכה מסכמת')}
+${progressBar('התקדמות שלב ג׳', scores[2])}
+${card('השגת יעדים ותוצאות','',legend(['לא הושג','הושג חלקית','הושג ברובו','הושג במלואו'])+scaleRow('out1','הושג שיפור בתחום הנבחר','')+scaleRow('out2','שביעות הרצון של קהל היעד גבוהה','')+scaleRow('out4','התוצאות מצביעות על כדאיות ההשקעה','')+`<div style="font-size:10px;color:#6b7280;margin-top:8px">נתוני השוואה:</div>${noteBox(e.notes?.n8,'')}`)}
+${card('לקחים והמלצות','',`<div style="font-size:10px;color:#6b7280;margin-bottom:3px">מה לא עבד:</div>${noteBox(e.notes?.n9,'')}<div style="font-size:10px;color:#6b7280;margin-top:10px;margin-bottom:3px">מה עבד טוב:</div>${noteBox(e.notes?.n10,'')}<div style="font-size:10px;color:#6b7280;margin-top:10px;margin-bottom:3px">המלצה לשנה הבאה:</div>${noteBox(e.notes?.n11,'')}`)}
+<div class="pb"></div>
+${banner('#eafaf1','#27ae60','סיכום ולקחים','תמונה כוללת')}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+  ${[['שלב א׳',scores[0],'#1a2744'],['שלב ב׳',scores[1],'#0d7c66'],['שלב ג׳',scores[2],'#e67e22']].map(([l,s,c])=>`
+  <div style="background:white;border-radius:12px;padding:18px;text-align:center;box-shadow:0 2px 10px rgba(26,39,68,0.08)">
+    <div style="font-size:2rem;font-weight:900;color:${c};line-height:1">${s}%</div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px">${l}</div>
+  </div>`).join('')}
+</div>
+<div style="background:#e8f5f2;border-radius:12px;padding:16px;border-right:4px solid #0d7c66;margin-bottom:14px">
+  <div style="font-size:13px;font-weight:700;color:#0d7c66;margin-bottom:8px">תובנות אוטומטיות</div>
+  <ul style="padding-right:18px;margin-bottom:10px">${insights.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join('')}</ul>
+  <div style="font-size:13px;font-weight:700;color:#b7800a;margin-top:10px;margin-bottom:8px">דרכי פעולה מומלצות</div>
+  <ul style="padding-right:18px;margin-bottom:10px">${actions.length?actions.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join(''):'<li style="list-style:none;font-size:12px;color:#aaa;font-style:italic">אין פריטים להצגה</li>'}</ul>
+  <div style="font-size:13px;font-weight:700;color:#1a2744;margin-top:10px;margin-bottom:8px">דרכי שיפור הנתונים</div>
+  <ul style="padding-right:18px">${dataRecs.length?dataRecs.map(t=>`<li style="font-size:12px;margin-bottom:5px;line-height:1.6">${t}</li>`).join(''):'<li style="list-style:none;font-size:12px;color:#aaa;font-style:italic">אין פריטים להצגה</li>'}</ul>
+</div>
+${card('החלטה על המשך התוכנית','',
+  (e.decision?`<div style="display:inline-block;background:#e8f5f2;border:2px solid #0d7c66;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;color:#0d7c66;margin-bottom:10px">${decMap[e.decision]||e.decision}</div>`:`<div style="font-size:12px;color:#bbb;margin-bottom:10px">טרם נבחרה החלטה</div>`)+
+  `<div style="font-size:10px;color:#6b7280;margin-bottom:3px">הנמקה:</div>${noteBox(e.notes?.n12,'')}`
+)}
+${card('הערות סיכום כלליות','',noteBox(e.notes?.n13,''))}
+<div style="text-align:center;font-size:10px;color:#aaa;margin-top:20px;padding-top:12px;border-top:1px solid #e0e6ed">
+  כלי הערכת תוכניות חינוכיות | מחוז חיפה | ${new Date().toLocaleString('he-IL')}
+</div>
+</div></body></html>`;
+
     const w = window.open('', '_blank');
-    const dLabel = dh[e.decision] || '—';
-    const bCl = v => v >= 80 ? '#d4edda' : v >= 50 ? '#fff3cd' : '#f8d7da';
-    const bTx = v => v >= 80 ? '#155724' : v >= 50 ? '#856404' : '#721c24';
-    w.document.write(`<!DOCTYPE html><html dir="rtl"><head>
-      <meta charset="utf-8"/>
-      <title>דוח הערכה — ${e.userSchool||''}</title>
-      <style>
-        body{font-family:'Heebo',Arial,sans-serif;direction:rtl;padding:30px;color:#1a2233;font-size:14px}
-        h1{font-size:20px;color:#1a3a5c;margin-bottom:4px}
-        .sub{color:#666;font-size:13px;margin-bottom:20px}
-        .section{margin-bottom:18px}
-        .section h2{font-size:15px;color:#1a3a5c;border-bottom:2px solid #e8f0fe;padding-bottom:4px;margin-bottom:10px}
-        .row{display:flex;gap:30px;margin-bottom:6px}
-        .lbl{color:#888;font-size:12px;min-width:120px}
-        .val{font-weight:600}
-        .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700}
-        @media print{body{padding:15px}}
-      </style>
-    </head><body>
-      <h1>🌸 דוח הערכת תוכנית — כלנית</h1>
-      <div class="sub">תאריך: ${formatDate(e.savedAt)}</div>
-      <div class="section"><h2>פרטי המוסד</h2>
-        <div class="row"><span class="lbl">סמל מוסד</span><span class="val">${e.userName||'—'}</span></div>
-        <div class="row"><span class="lbl">שם בית הספר</span><span class="val">${e.userSchool||'—'}</span></div>
-        <div class="row"><span class="lbl">שם מנהל/ת</span><span class="val">${e.userPrincipal||'—'}</span></div>
-        <div class="row"><span class="lbl">שם מפקח/ת</span><span class="val">${e.userSupervisor||'—'}</span></div>
-      </div>
-      <div class="section"><h2>פרטי התוכנית</h2>
-        <div class="row"><span class="lbl">שם תוכנית</span><span class="val">${e.fields?.['f-prog']||'—'}</span></div>
-        <div class="row"><span class="lbl">שנת לימודים</span><span class="val">${e.fields?.['f-year']||'—'}</span></div>
-        <div class="row"><span class="lbl">קהל יעד</span><span class="val">${e.fields?.['f-target']||'—'}</span></div>
-        <div class="row"><span class="lbl">תחום</span><span class="val">${e.fields?.['f-domain']||'—'}</span></div>
-      </div>
-      <div class="section"><h2>ציונים לפי שלבים</h2>
-        <div class="row"><span class="lbl">שלב א׳</span>
-          <span class="badge" style="background:${bCl(e.phase1_pct)};color:${bTx(e.phase1_pct)}">${e.phase1_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ב׳</span>
-          <span class="badge" style="background:${bCl(e.phase2_pct)};color:${bTx(e.phase2_pct)}">${e.phase2_pct||0}%</span></div>
-        <div class="row"><span class="lbl">שלב ג׳</span>
-          <span class="badge" style="background:${bCl(e.phase3_pct)};color:${bTx(e.phase3_pct)}">${e.phase3_pct||0}%</span></div>
-      </div>
-      <div class="section"><h2>החלטה והנמקה</h2>
-        <div class="row"><span class="lbl">המלצה</span><span class="val">${dLabel}</span></div>
-        <div class="row"><span class="lbl">הנמקה</span><span class="val">${e.decision_reason||'—'}</span></div>
-        <div class="row"><span class="lbl">הערות</span><span class="val">${e.summary_notes||'—'}</span></div>
-      </div>
-    </body></html>`);
+    w.document.write(html);
     w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 400);
+    setTimeout(() => w.print(), 800);
   }
 
-  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const avgMid   = avg(filtered.map(e=>e.phase2_pct).filter(v=>v!=null));
-  const avgAll   = avg(filtered.flatMap(e=>[e.phase1_pct,e.phase2_pct,e.phase3_pct].filter(v=>v!=null)));
-  const fullCount = filtered.filter(e=>e.phase1_pct>=60).length;
-
-  // סגנון משותף לשדות חיפוש טקסט
-  const inputStyle = active => ({
-    padding: '7px 12px', borderRadius: 8, fontFamily: 'Heebo',
-    fontSize: '0.82rem', outline: 'none', direction: 'rtl', width: 150,
-    border: active ? '1.5px solid #4a90d9' : '1.5px solid #dde3ee',
-    background: active ? '#e8f3fd' : 'white',
-    color: '#1a2233'
-  });
+  const bc = v => !v ? 'ab-y' : v >= 80 ? 'ab-g' : v >= 50 ? 'ab-y' : 'ab-r';
+  const dh = { continue: 'המשך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
 
   return (
-    <div className={`screen admin-screen${active ? ' active' : ''}`}
-         style={{ flexDirection:'column', background:'#f0f4f8',
-                  fontFamily:'Heebo, Arial, sans-serif' }}>
+    <div className={`screen admin-screen${active ? ' active' : ''}`} style={{ display: 'flex' }}>
 
-      {/* ── כניסה ── */}
-      {!authed && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)',
-                      backdropFilter:'blur(8px)', zIndex:200, display:'flex',
-                      alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'white', borderRadius:20, padding:38,
-                        maxWidth:360, width:'90%', textAlign:'center' }}>
-            <div style={{ fontSize:'2.2rem' }}>🔐</div>
-            <h2 style={{ fontSize:'1.25rem', fontWeight:800, color:'#1a3a5c', margin:'10px 0 5px' }}>
-              כניסת מנהל מערכת
-            </h2>
-            <p style={{ fontSize:'0.81rem', color:'#888', marginBottom:22 }}>הכנס/י את סיסמת המנהל</p>
-            <input type="password" autoComplete="new-password" value={pw}
-                   onChange={e => setPw(e.target.value)}
-                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                   placeholder="סיסמה"
-                   style={{ width:'100%', border:'2px solid #dde3ee', borderRadius:10,
-                            padding:'11px 13px', fontFamily:'Heebo', fontSize:'1rem',
-                            textAlign:'center', letterSpacing:3, background:'#f4f7fb', marginBottom:13 }} />
-            {pwError && <p style={{ color:'#c0392b', fontSize:'0.8rem', marginBottom:10 }}>❌ סיסמה שגויה</p>}
-            <button onClick={handleLogin}
-              style={{ width:'100%', padding:12, borderRadius:10, border:'none',
-                       background:'#1a3a5c', color:'white', fontFamily:'Heebo',
-                       fontSize:'1rem', fontWeight:700, cursor:'pointer' }}>
-              כניסה
-            </button>
-            <br/><br/>
-            <button onClick={onBack}
-              style={{ background:'none', border:'none', color:'#888',
-                       cursor:'pointer', fontSize:'0.8rem', fontFamily:'Heebo' }}>
-              ← חזור
-            </button>
+      {/* חלון אישור מחיקה */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 36, maxWidth: 380, width: '90%', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🗑️</div>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#c0392b', marginBottom: 10 }}>מחיקת הערכה</h2>
+            <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>האם אתה בטוח שברצונך למחוק את:</p>
+            <p style={{ fontSize: '1rem', fontWeight: 700, color: '#1a2744', marginBottom: 20 }}>
+              {deleteConfirm.name || deleteConfirm.code}
+            </p>
+            <p style={{ fontSize: '0.78rem', color: '#e74c3c', marginBottom: 24 }}>
+              ⚠️ פעולה זו היא סופית ולא ניתנת לביטול!
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button onClick={handleDelete} disabled={deleting}
+                style={{ padding: '10px 24px', background: '#c0392b', color: 'white', border: 'none', borderRadius: 10, fontFamily: 'Heebo', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
+                {deleting ? 'מוחק...' : 'כן, מחק'}
+              </button>
+              <button onClick={() => setDeleteConfirm(null)} disabled={deleting}
+                style={{ padding: '10px 24px', background: '#f3f4f6', color: '#1a2744', border: 'none', borderRadius: 10, fontFamily: 'Heebo', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
+                ביטול
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── כותרת ── */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-                    padding:'12px 24px', background:'#1a3a5c', flexShrink:0,
-                    boxShadow:'0 2px 8px rgba(0,0,0,0.15)' }}>
-        <h1 style={{ color:'white', fontSize:'1rem', fontWeight:800, margin:0 }}>
-          🛡️ מנהל מערכת — כל הנתונים
-        </h1>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={exportXlsx}
-            style={{ padding:'9px 18px', borderRadius:9, fontFamily:'Heebo', fontSize:'0.83rem',
-                     fontWeight:700, cursor:'pointer', border:'none',
-                     background:'#27ae60', color:'white', whiteSpace:'nowrap' }}>
-            📥 ייצוא לאקסל{isFiltered ? ` (${filtered.length})` : ''}
-          </button>
-          <button onClick={onBack}
-            style={{ padding:'9px 18px', borderRadius:9, fontFamily:'Heebo', fontSize:'0.83rem',
-                     fontWeight:700, cursor:'pointer', border:'none',
-                     background:'rgba(255,255,255,0.15)', color:'white', whiteSpace:'nowrap' }}>
-            ← יציאה
-          </button>
+      {/* Login overlay */}
+      {!authed && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 38, maxWidth: 360, width: '90%', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.2rem' }}>🔐</div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--navy)', margin: '10px 0 5px' }}>כניסת מנהל מערכת</h2>
+            <p style={{ fontSize: '0.81rem', color: 'var(--gray)', marginBottom: 22 }}>הכנס/י את סיסמת המנהל</p>
+            <input type="password" autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)}
+                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                   placeholder="סיסמה"
+                   style={{ width: '100%', border: '2px solid var(--border)', borderRadius: 10, padding: '11px 13px', fontFamily: 'Heebo', fontSize: '1rem', textAlign: 'center', letterSpacing: 3, background: 'var(--gray-light)', marginBottom: 13 }} />
+            {pwError && <p style={{ color: 'var(--red)', fontSize: '0.8rem', marginBottom: 10 }}>❌ סיסמה שגויה</p>}
+            <button className="btn-main" onClick={handleLogin}>כניסה</button>
+            <br /><br />
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--gray)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'Heebo' }}>← חזור</button>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-header">
+        <h1>🛡️ מנהל מערכת — כל הנתונים</h1>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={exportXlsx} style={{ padding: '9px 20px', borderRadius: 9, fontFamily: 'Heebo', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'var(--green)', color: 'white' }}>📥 ייצוא לאקסל</button>
+          <button onClick={onBack} style={{ padding: '9px 20px', borderRadius: 9, fontFamily: 'Heebo', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white' }}>← יציאה</button>
         </div>
       </div>
 
-      {/* ── גוף גלילה ── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'20px 24px 40px',
-                    WebkitOverflowScrolling:'touch' }}>
-
-        {/* כרטיסי סטטיסטיקה */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
+      <div className="admin-body">
+        <div className="admin-stat-grid">
           {[
-            { v: filtered.length,                       l: isFiltered ? 'תוצאות פילטר' : 'סה"כ הגשות' },
-            { v: fullCount,                             l: 'הגשות מלאות' },
-            { v: avgMid != null ? avgMid + '%' : '—',  l: 'ממוצע מהלך' },
-            { v: avgAll != null ? avgAll + '%' : '—',  l: 'ממוצע כללי' },
+            { v: entries.length, l: 'סה"כ הגשות' },
+            { v: entries.filter(e => e.phase1_pct >= 60).length, l: 'הגשות מלאות' },
+            { v: entries.length ? Math.round(entries.reduce((a, e) => a + (e.phase2_pct || 0), 0) / entries.length) + '%' : '—', l: 'ממוצע מהלך' },
+            { v: entries.length ? Math.round(entries.reduce((a, e) => a + (e.phase3_pct || 0), 0) / entries.length) + '%' : '—', l: 'ממוצע תוצאות' },
           ].map(({ v, l }) => (
-            <div key={l} style={{ background:'white', borderRadius:12, padding:'14px 18px',
-                                  boxShadow:'0 1px 4px rgba(0,0,0,0.08)', textAlign:'center' }}>
-              <div style={{ fontSize:'1.6rem', fontWeight:800, color:'#1a3a5c' }}>{v ?? '—'}</div>
-              <div style={{ fontSize:'0.75rem', color:'#888', marginTop:2 }}>{l}</div>
+            <div key={l} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: '16px 20px', color: 'white' }}>
+              <div style={{ fontSize: '1.9rem', fontWeight: 900 }}>{v}</div>
+              <div style={{ fontSize: '0.73rem', opacity: 0.55, marginTop: 3 }}>{l}</div>
             </div>
           ))}
         </div>
 
-        {/* ── שורת פילטרים ── */}
-        <div style={{ display:'flex', gap:12, alignItems:'flex-end', flexWrap:'wrap',
-                      background:'white', borderRadius:12, padding:'14px 18px',
-                      marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.07)',
-                      border:'1.5px solid #dde3ee' }}>
-          <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1a3a5c', alignSelf:'center' }}>
-            🔽 סינון:
-          </span>
-
-          {/* Dropdowns */}
-          {[
-            { label:'לפי המלצה', val:filterDecision, set:setFilterDecision,
-              opts:[['all','הכל'],['continue','המשך ✅'],['modify','עם שינויים 🔄'],
-                    ['replace','להחליף ⚠️'],['stop','לא להמשיך ❌']] },
-            { label:'לפי ציון כולל', val:filterColor, set:setFilterColor,
-              opts:[['all','הכל'],['green','🟢 ירוק (80%+)'],['yellow','🟡 צהוב (50–79%)'],
-                    ['red','🔴 אדום (עד 49%)'],['none','⚪ אין ציון']] },
-            { label:'לפי מפקח/ת', val:filterSupervisor, set:setFilterSupervisor,
-              opts:[['all','כל המפקחים'], ...supervisors.map(s=>[s,s])] },
-          ].map(({ label, val, set, opts }) => (
-            <div key={label} style={{ display:'flex', flexDirection:'column', gap:3 }}>
-              <label style={{ fontSize:'0.71rem', color:'#888' }}>{label}</label>
-              <select value={val} onChange={e => set(e.target.value)}
-                style={{ padding:'7px 12px', borderRadius:8, fontFamily:'Heebo',
-                         fontSize:'0.82rem', cursor:'pointer', outline:'none',
-                         direction:'rtl', minWidth:150,
-                         border: val !== 'all' ? '1.5px solid #4a90d9' : '1.5px solid #dde3ee',
-                         background: val !== 'all' ? '#e8f3fd' : 'white',
-                         color: val !== 'all' ? '#1a3a5c' : '#1a2233',
-                         fontWeight: val !== 'all' ? 700 : 400 }}>
-                {opts.map(([v,t]) => <option key={v} value={v}>{t}</option>)}
-              </select>
-            </div>
-          ))}
-
-          {/* חיפוש שם בית ספר */}
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <label style={{ fontSize:'0.71rem', color:'#888' }}>חיפוש שם בית ספר</label>
-            <input
-              type="text"
-              placeholder="הקלידי שם..."
-              value={filterSchool}
-              onChange={e => setFilterSchool(e.target.value)}
-              style={inputStyle(filterSchool.trim() !== '')}
-            />
-          </div>
-
-          {/* חיפוש סמל מוסד */}
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <label style={{ fontSize:'0.71rem', color:'#888' }}>חיפוש סמל מוסד</label>
-            <input
-              type="text"
-              placeholder="הקלידי סמל..."
-              value={filterSymbol}
-              onChange={e => setFilterSymbol(e.target.value)}
-              style={inputStyle(filterSymbol.trim() !== '')}
-            />
-          </div>
-
-          {/* כפתור איפוס */}
-          {isFiltered && (
-            <button onClick={resetFilters}
-              style={{ alignSelf:'flex-end', padding:'7px 14px', borderRadius:8, border:'none',
-                       background:'#fde8e8', color:'#9c1a1a', fontFamily:'Heebo',
-                       fontSize:'0.78rem', fontWeight:700, cursor:'pointer' }}>
-              ✕ נקה ({entries.length - filtered.length} מוסתרים)
-            </button>
-          )}
-        </div>
-
-        {/* ── טבלה ── */}
-        {loading ? (
-          <div style={{ textAlign:'center', padding:40, color:'#888' }}>טוען נתונים...</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign:'center', padding:40, color:'#888',
-                        background:'white', borderRadius:12 }}>
-            <div style={{ fontSize:'2rem', marginBottom:8 }}>🔍</div>
-            {isFiltered ? 'לא נמצאו תוצאות — נסי לאפס את הפילטרים' : 'אין הגשות עדיין'}
-          </div>
-        ) : (
-          <div style={{ background:'white', borderRadius:12,
-                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)', overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
-              <thead>
-                <tr>
-                  {['סמל מוסד','שם בית ספר','מפקח/ת','שם מנהל/ת','תוכנית',
-                    'תחום','שלב א׳','שלב ב׳','שלב ג׳','המלצה','עדכון','דוח'].map(h => (
-                    <th key={h} style={{ background:'#e8f0fa', color:'#1a3a5c',
-                                        padding:'10px 13px', textAlign:'right',
-                                        fontWeight:700, fontSize:'0.75rem',
-                                        borderBottom:'2px solid #d0ddf0',
-                                        whiteSpace:'nowrap' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((e, i) => {
-                  const tdStyle = {
-                    padding:'9px 13px', color:'#1a2233',
-                    borderBottom:'1px solid #f0f4f8', verticalAlign:'middle',
-                    background: i % 2 === 0 ? 'white' : '#fafbfd'
-                  };
-                  return (
-                    <tr key={i}>
-                      <td style={tdStyle}><strong>{e.userName||'—'}</strong></td>
-                      <td style={tdStyle}>{e.userSchool||'—'}</td>
-                      <td style={tdStyle}>{e.userSupervisor||'—'}</td>
-                      <td style={tdStyle}>{e.userPrincipal||'—'}</td>
-                      <td style={tdStyle}>{e.fields?.['f-prog']||'—'}</td>
-                      <td style={tdStyle}>{e.fields?.['f-domain']||'—'}</td>
-                      <td style={tdStyle}><BadgeCell pct={e.phase1_pct} /></td>
-                      <td style={tdStyle}><BadgeCell pct={e.phase2_pct} /></td>
-                      <td style={tdStyle}><BadgeCell pct={e.phase3_pct} /></td>
-                      <td style={tdStyle}>{dh[e.decision]||'—'}</td>
-                      <td style={{ ...tdStyle, fontSize:'0.73rem', color:'#999' }}>
-                        {formatDate(e.savedAt)}
-                      </td>
-                      <td style={tdStyle}>
-                        <button onClick={() => handlePrint(e)}
-                          style={{ padding:'5px 10px', borderRadius:7, border:'none',
-                                   background:'#e8f3fd', color:'#1a5a9c', fontFamily:'Heebo',
-                                   fontSize:'0.74rem', fontWeight:700, cursor:'pointer' }}>
-                          🖨️ דוח
+        <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+          <table className="atable">
+            <thead>
+              <tr>
+                <th>פעולות</th><th>שם</th><th>בית ספר</th><th>מפקח/ת</th><th>תוכנית</th><th>תחום</th>
+                <th>הכנה</th><th>מהלך</th><th>תוצאות</th><th>החלטה</th><th>עדכון</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan={11} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>טוען...</td></tr>}
+              {!loading && !entries.length && <tr><td colSpan={11} style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.35)' }}>אין נתונים עדיין</td></tr>}
+              {entries.map((e, i) => {
+                const dt = new Date(e.savedAt);
+                const ds = dt.toLocaleDateString('he-IL') + ' ' + dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <tr key={i}>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => printEntry(e)}
+                          title="הדפס דוח מלא"
+                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: '1rem' }}>
+                          🖨️
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        <button onClick={() => setDeleteConfirm({ code: e.userCode, name: `${e.fields?.['f-prog'] || ''} — ${e.userSchool || ''}` })}
+                          title="מחק הערכה"
+                          style={{ background: 'rgba(192,57,43,0.3)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: '1rem' }}>
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                    <td><strong>{e.userName || '—'}</strong></td>
+                    <td>{e.userSchool || '—'}</td>
+                    <td>{e.userSupervisor || '—'}</td>
+                    <td>{e.fields?.['f-prog'] || '—'}</td>
+                    <td>{e.fields?.['f-domain'] || '—'}</td>
+                    <td><span className={`abadge ${bc(e.phase1_pct)}`}>{e.phase1_pct || 0}%</span></td>
+                    <td><span className={`abadge ${bc(e.phase2_pct)}`}>{e.phase2_pct || 0}%</span></td>
+                    <td><span className={`abadge ${bc(e.phase3_pct)}`}>{e.phase3_pct || 0}%</span></td>
+                    <td style={{ fontSize: '.78rem' }}>{dh[e.decision] || '—'}</td>
+                    <td style={{ fontSize: '.74rem', opacity: 0.6 }}>{ds}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
