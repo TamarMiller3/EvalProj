@@ -9,7 +9,7 @@ export function AdminScreen({ onBack, active }) {
   const [pwError, setPwError]       = useState(false);
   const [entries, setEntries]       = useState([]);
   const [loading, setLoading]       = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { code, name }
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting]     = useState(false);
 
   async function handleLogin() {
@@ -50,37 +50,104 @@ export function AdminScreen({ onBack, active }) {
   function exportXlsx() {
     if (!entries.length) return;
     const dh = { continue: 'להמשיך', modify: 'עם שינויים', replace: 'להחליף', stop: 'לא להמשיך' };
+    const scaleText = v => !v ? '' : v === 1 ? '1 — לא מתקיים' : v === 2 ? '2 — חלקי' : v === 3 ? '3 — מספק' : '4 — מצוין';
+    const chk = (e, id) => e.checks?.[id] ? 'כן' : 'לא';
+
     const H = [
+      // פרטים כלליים
       'סמל מוסד', 'שם בית ספר', 'שם מנהל/ת', 'שם מפקח/ת', 'קוד',
-      'שם תוכנית', 'שנת לימודים', 'קהל יעד', 'תחום', 'יעד',
+      'שם תוכנית', 'שנת לימודים', 'וותק', 'קהל יעד', 'יעד', 'תחום',
+      'מספר תלמידים', 'מספר אנשי צוות',
+      // ציונים
       'שלב א׳ %', 'שלב ב׳ %', 'שלב ג׳ %',
-      'החלטה', 'הנמקה', 'הערות סיכום',
+      // שלב א׳ — תיבות סימון
+      'א1 — מיפוי תמונת מצב', 'א2 — אותרו צרכים', 'א3 — נתונים פנימיים וחיצוניים',
+      'א4 — שותפות הנהלה', 'א5 — סטטוס אוכלוסיית יעד',
+      'א6 — הלימה למטרות', 'א7 — נבדקו חלופות', 'א8 — המלצות מבתי ספר', 'א9 — אין חפיפה',
+      'א10 — שעות מעוגנות', 'א11 — תשתיות הותאמו', 'א12 — הוגדר אחראי',
+      'א13 — הוגדר קהל יעד', 'א14 — משאב תקציבי אושר',
+      'א15 — מדדי סדירות', 'א16 — מדדי תפוקה', 'א17 — כלי הערכה',
+      'א18 — צמתי הערכה', 'א19 — יעד ספציפי',
+      // הערות שלב א׳
+      'הערה א׳1 — צורך מרכזי', 'הערה א׳2 — הלימה', 'הערה א׳3 — משאבים', 'הערה א׳4 — מדדים',
+      // שלב ב׳ — סולמות
+      'ב1 — סדירות מפגשים', 'ב2 — השתתפות קהל יעד',
+      'ב3 — תכנון מפגשים', 'ב4 — התאמת מנחה', 'ב5 — יישום מטרות',
+      'ב6 — שביעות רצון תלמידים', 'ב7 — שביעות רצון מורים',
+      'ב8 — עדויות לשינוי', 'ב9 — תשתיות מספיקות',
+      // הערות שלב ב׳
+      'הערה ב׳1 — סדירות', 'הערה ב׳2 — איכות', 'הערה ב׳3 — עדויות',
+      // שלב ג׳ — סולמות
+      'ג1 — שיפור בתחום', 'ג2 — שביעות רצון קהל יעד', 'ג3 — כדאיות השקעה',
+      // הערות שלב ג׳
+      'הערה ג׳1 — נתוני השוואה', 'הערה ג׳2 — מה לא עבד',
+      'הערה ג׳3 — מה עבד', 'הערה ג׳4 — המלצה לשנה הבאה',
+      // סיכום
+      'החלטה', 'הנמקה', 'הערות סיכום כלליות',
+      // תובנות
       'תובנות אוטומטיות', 'דרכי פעולה מומלצות', 'דרכי שיפור נתונים',
       'תאריך עדכון'
     ];
+
     const rows = entries.map(e => {
       const scores = [e.phase1_pct || 0, e.phase2_pct || 0, e.phase3_pct || 0, 0];
       const { insights, actions, dataRecs } = generateInsights(e, scores);
       return [
+        // פרטים כלליים
         e.userName || '', e.userSchool || '', e.userPrincipal || '', e.userSupervisor || '', e.userCode || '',
-        e.fields?.['f-prog'] || '', e.fields?.['f-year'] || '',
+        e.fields?.['f-prog'] || '', e.fields?.['f-year'] || '', e.fields?.['f-seniority'] || '',
         e.fields?.['f-target'] || '', e.fields?.['f-domain'] || '', e.fields?.['f-area'] || '',
+        e.fields?.['f-num'] || '', e.fields?.['f-contact'] || '',
+        // ציונים
         (e.phase1_pct || 0) + '%', (e.phase2_pct || 0) + '%', (e.phase3_pct || 0) + '%',
+        // שלב א׳ — תיבות סימון
+        chk(e,'c1'), chk(e,'c2'), chk(e,'c3'), chk(e,'c4'), chk(e,'c5'),
+        chk(e,'c19'), chk(e,'c6'), chk(e,'c7'), chk(e,'c8'),
+        chk(e,'c9'), chk(e,'c10'), chk(e,'c11'), chk(e,'c12'), chk(e,'c13'),
+        chk(e,'c14'), chk(e,'c15'), chk(e,'c16'), chk(e,'c17'), chk(e,'c18'),
+        // הערות שלב א׳
+        e.notes?.n1 || '', e.notes?.n2 || '', e.notes?.n3 || '', e.notes?.n4 || '',
+        // שלב ב׳ — סולמות
+        scaleText(e.scales?.reg1), scaleText(e.scales?.reg2),
+        scaleText(e.scales?.qu1), scaleText(e.scales?.qu2), scaleText(e.scales?.qu3),
+        scaleText(e.scales?.qu4), scaleText(e.scales?.qu5),
+        scaleText(e.scales?.pr1), scaleText(e.scales?.pr2),
+        // הערות שלב ב׳
+        e.notes?.n5 || '', e.notes?.n6 || '', e.notes?.n7 || '',
+        // שלב ג׳ — סולמות
+        scaleText(e.scales?.out1), scaleText(e.scales?.out2), scaleText(e.scales?.out4),
+        // הערות שלב ג׳
+        e.notes?.n8 || '', e.notes?.n9 || '', e.notes?.n10 || '', e.notes?.n11 || '',
+        // סיכום
         dh[e.decision] || '', e.notes?.n12 || '', e.notes?.n13 || '',
+        // תובנות
         insights.join(' | '), actions.join(' | '), dataRecs.join(' | '),
         new Date(e.savedAt).toLocaleString('he-IL')
       ];
     });
-    const ws = XLSX.utils.aoa_to_sheet([H, ...rows]);
-    ws['!cols'] = [
-      {wch:12},{wch:20},{wch:16},{wch:16},{wch:12},
-      {wch:22},{wch:12},{wch:20},{wch:16},{wch:16},
-      {wch:10},{wch:10},{wch:10},
-      {wch:14},{wch:40},{wch:40},
-      {wch:50},{wch:50},{wch:50},{wch:18}
-    ];
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'נתונים');
+
+    // גיליון 1 — נתונים מלאים
+    const ws1 = XLSX.utils.aoa_to_sheet([H, ...rows]);
+    ws1['!cols'] = H.map((h, i) => ({
+      wch: i < 5 ? 12 : i < 13 ? 20 : i < 16 ? 10 : i < 35 ? 8 : 40
+    }));
+    XLSX.utils.book_append_sheet(wb, ws1, 'נתונים מלאים');
+
+    // גיליון 2 — סיכום מנהלי
+    const H2 = ['סמל מוסד', 'שם בית ספר', 'מפקח/ת', 'שם תוכנית', 'קהל יעד',
+                 'שלב א׳ %', 'שלב ב׳ %', 'שלב ג׳ %', 'החלטה', 'תאריך'];
+    const rows2 = entries.map(e => [
+      e.userName || '', e.userSchool || '', e.userSupervisor || '',
+      e.fields?.['f-prog'] || '', e.fields?.['f-target'] || '',
+      (e.phase1_pct || 0) + '%', (e.phase2_pct || 0) + '%', (e.phase3_pct || 0) + '%',
+      dh[e.decision] || '', new Date(e.savedAt).toLocaleDateString('he-IL')
+    ]);
+    const ws2 = XLSX.utils.aoa_to_sheet([H2, ...rows2]);
+    ws2['!cols'] = [{wch:12},{wch:20},{wch:16},{wch:22},{wch:20},{wch:10},{wch:10},{wch:10},{wch:14},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'סיכום מנהלי');
+
     XLSX.writeFile(wb, `RAMA_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`);
   }
 
@@ -190,7 +257,7 @@ ${card('בחירת התוכנית והלימה לצורך','',
   `<div style="font-size:10px;color:#6b7280;margin-top:8px">הסבר על ההלימה:</div>${noteBox(e.notes?.n2,'')}`
 )}
 ${card('משאבים ותשתית','',
-  ['c9','c10','c11','c12','c13'].map((c,i)=>ciRow(c,['שעות להפעלת התוכנית מעוגנות במערכת הבית ספרית','הותאמו תשתיות הנדרשות ליישום התוכנית','הוגדר אחראי מטעם בית הספר והוגדרו תחומי אחריותו','הוגדר קהל היעד — מספר תלמידים ומאפיינים','הוגדר משאב תקציבי ואושר על ידי מפקחת בית הספר'][i])).join('')+
+  ['c9','c10','c11','c12','c13'].map((c,i)=>ciRow(c,['שעות להפעלת התוכנית מעוגנות במערכת הבית ספרית','הותאמו תשתיות הנדרשות ליישום התוכנית','הוגדר אחראי מטעם בית הספר והוגדרו תחומי אחריותו','הוגדר קהל היעד — מספר תלמידים / מורים ומאפיינים','הוגדר משאב תקציבי ואושר על ידי מפקחת בית הספר'][i])).join('')+
   `<div style="font-size:10px;color:#6b7280;margin-top:8px">פרטי משאבים:</div>${noteBox(e.notes?.n3,'')}`
 )}
 ${card('מדדי הערכה וצמתי מעקב','',
@@ -247,19 +314,14 @@ ${card('הערות סיכום כלליות','',noteBox(e.notes?.n13,''))}
   return (
     <div className={`screen admin-screen${active ? ' active' : ''}`} style={{ display: 'flex' }}>
 
-      {/* חלון אישור מחיקה */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'white', borderRadius: 20, padding: 36, maxWidth: 380, width: '90%', textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🗑️</div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#c0392b', marginBottom: 10 }}>מחיקת הערכה</h2>
             <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>האם אתה בטוח שברצונך למחוק את:</p>
-            <p style={{ fontSize: '1rem', fontWeight: 700, color: '#1a2744', marginBottom: 20 }}>
-              {deleteConfirm.name || deleteConfirm.code}
-            </p>
-            <p style={{ fontSize: '0.78rem', color: '#e74c3c', marginBottom: 24 }}>
-              ⚠️ פעולה זו היא סופית ולא ניתנת לביטול!
-            </p>
+            <p style={{ fontSize: '1rem', fontWeight: 700, color: '#1a2744', marginBottom: 20 }}>{deleteConfirm.name || deleteConfirm.code}</p>
+            <p style={{ fontSize: '0.78rem', color: '#e74c3c', marginBottom: 24 }}>⚠️ פעולה זו היא סופית ולא ניתנת לביטול!</p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
               <button onClick={handleDelete} disabled={deleting}
                 style={{ padding: '10px 24px', background: '#c0392b', color: 'white', border: 'none', borderRadius: 10, fontFamily: 'Heebo', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
@@ -274,7 +336,6 @@ ${card('הערות סיכום כלליות','',noteBox(e.notes?.n13,''))}
         </div>
       )}
 
-      {/* Login overlay */}
       {!authed && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'white', borderRadius: 20, padding: 38, maxWidth: 360, width: '90%', textAlign: 'center' }}>
@@ -334,8 +395,7 @@ ${card('הערות סיכום כלליות','',noteBox(e.notes?.n13,''))}
                   <tr key={i}>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => printEntry(e)}
-                          title="הדפס דוח מלא"
+                        <button onClick={() => printEntry(e)} title="הדפס דוח מלא"
                           style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: '1rem' }}>
                           🖨️
                         </button>
@@ -366,3 +426,4 @@ ${card('הערות סיכום כלליות','',noteBox(e.notes?.n13,''))}
     </div>
   );
 }
+
